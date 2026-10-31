@@ -24,6 +24,8 @@ El juego está pensado para jugarse en el celular, parado (en vertical).
 ## Reglas
 
 - Cada día te tocan 3 vecinos, cada vez más difíciles.
+- En la lista de contactos ves qué se dice de cada vecino: ahí está la pista de su punto débil.
+- Si le tocás el punto débil, se va convenciendo. Los del primer día caen en pocas frases; los del tercero cuestan bastante más.
 - Tenés 10 frases por llamada para convencerlos.
 - Si la sospecha llega al 100%, te denuncian. Con 3 denuncias, perdés.
 - Hay que llegar a la meta de plata al final de cada día.

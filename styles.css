@@ -571,6 +571,13 @@ button {
   color: var(--ios-gris);
 }
 
+.contacto-info .rumor {
+  font-size: 13px;
+  font-style: italic;
+  line-height: 1.3;
+  color: #8a5a00;
+}
+
 .contacto-accion {
   flex-shrink: 0;
   font-size: 14px;
