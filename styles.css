@@ -179,6 +179,8 @@ body {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  /* "clip" impide que el navegador la desplace (por ejemplo, hacia el chat escondido). */
+  overflow: clip;
   border-radius: 52px;
   background: #000;
   box-shadow: 0 0 0 4px #000;
@@ -482,6 +484,16 @@ button {
   outline: none;
 }
 
+.valor {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #3c3c4399;
+}
+
 .fila-boton {
   justify-content: center;
 }
@@ -741,6 +753,11 @@ button {
   box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.35);
   transform: translateY(105%);
   transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.hoja:not(.abierta) {
+  visibility: hidden;
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s 0.35s;
 }
 
 .hoja.abierta {
