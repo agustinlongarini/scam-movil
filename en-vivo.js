@@ -147,7 +147,7 @@ class LlamadaEnVivo {
       const pista = this.stream.getAudioTracks()[0];
       this.log(`micrófono abierto: ${pista?.label || 'sin nombre'} ${JSON.stringify(pista?.getSettings?.() || {})}`);
       if (!LlamadaEnVivo.capturaCargada) {
-        await this.ctx.audioWorklet.addModule('captura-audio.js?v=12');
+        await this.ctx.audioWorklet.addModule('captura-audio.js?v=13');
         LlamadaEnVivo.capturaCargada = true;
       }
       if (this.cerrada) return this.cerrarMicrofono();
@@ -229,8 +229,9 @@ class LlamadaEnVivo {
       this.cuenta.herramientas++;
       this.log(`función: ${JSON.stringify(msj.toolCall.functionCalls || []).slice(0, 200)}`);
       const respuestas = (msj.toolCall.functionCalls || []).map((llamada) => {
-        this.ev.onHerramienta(llamada.name, llamada.args || {});
-        return { id: llamada.id, name: llamada.name, response: { result: 'ok' } };
+        // El juego puede contestarle al vecino (por ejemplo, "todavía no pagues").
+        const respuesta = this.ev.onHerramienta(llamada.name, llamada.args || {}) || { result: 'ok' };
+        return { id: llamada.id, name: llamada.name, response: respuesta };
       });
       this.enviar({ toolResponse: { functionResponses: respuestas } });
       return;
