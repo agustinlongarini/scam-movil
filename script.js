@@ -981,7 +981,7 @@ const DIFICULTAD = {
 function reglasDeJuego(p) {
   const d = DIFICULTAD[p.dificultad];
   return `Cómo funciona el juego (no lo digas nunca):
-- Es una comedia y el jugador tiene que poder ganarte. No seas imposible: si toca tu punto débil con un cuento más o menos coherente, te vas convenciendo.
+- Reaccioná como lo haría una persona real con tu personalidad: si el jugador toca tu punto débil con un cuento coherente y creíble, te vas convenciendo de a poco; si el cuento es flojo o no te interesa, no.
 - ${d.crédulo} Cada frase que toque tu punto débil sube tu confianza ${d.sube} puntos y baja tu sospecha.
 - Si el jugador es simpático o te sigue la corriente, la confianza sube un poco aunque no toque tu punto débil.
 - La sospecha sube de a poco (como mucho 25 puntos por frase) cuando se contradice, apura, pide datos raros o exagera. Solo llega a 100 si te das cuenta clarísimo de que es una estafa.
