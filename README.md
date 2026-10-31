@@ -26,9 +26,9 @@ El juego está pensado para jugarse en el celular, parado (en vertical).
 - Los días no terminan nunca: cada noche el Tano pasa a cobrar. Si tenés la plata, se la lleva y seguís con lo que te sobró. El día que no llegás, perdés.
 - Cada día el Tano pide un 35 % más ($4.000 el primer día, unos $13.500 el quinto, $59.500 el décimo) y los vecinos son más difíciles de convencer.
 - Se guarda tu récord de días aguantados.
-- Cada día te tocan 3 vecinos. Gemini los inventa nuevos cada día (con un solo pedido) y no repite nombres. Si preferís, en Ajustes podés jugar siempre con los 9 vecinos de siempre, que también se usan si Gemini falla.
+- Cada día te tocan 3 vecinos. Gemini los inventa nuevos cada día (con un solo pedido) a partir de un oficio, una manía y una situación que sortea el juego, y no repite nombres ni oficios recientes. Si preferís, en Ajustes podés jugar siempre con los 9 vecinos de siempre, que también se usan si Gemini falla.
 - Para sacarles plata hay que trabajarlos: primero desconfían, después preguntan y negocian, y recién pagan cuando aceptan un monto. Descubrir su punto débil es parte del juego.
-- Tenés 3 minutos por llamada para convencerlos. Cuando se termina el tiempo, el vecino se despide y corta.
+- Tenés 5 minutos por llamada para convencerlos. Cuando se termina el tiempo, el vecino se despide y corta.
 - Si la sospecha llega al 100%, el vecino se avivó y te corta.
 - Bardear a un vecino en broma vale: te contesta con humor.
 
@@ -46,6 +46,7 @@ Los modelos se eligen solos: el juego le pregunta a tu cuenta de Google cuáles 
 - `index.html`: el escritorio, el corcho y el iPhone con sus pantallas.
 - `styles.css`: estilos.
 - `personajes.js`: los 9 vecinos de siempre (también son el respaldo si Gemini no puede inventar nuevos).
+- `semillas.js`: oficios, manías y situaciones que el juego sortea para que Gemini invente vecinos variados. Podés sumar ideas.
 - `script.js`: lógica del juego, modo clásico y elección de modelos.
 - `en-vivo.js`: llamada en tiempo real con Gemini Live.
 - `captura-audio.js`: pasa el micrófono al formato que pide Gemini Live.

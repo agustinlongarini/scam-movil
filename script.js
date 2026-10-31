@@ -1,5 +1,5 @@
-const VERSION = 14;
-const SEGUNDOS_POR_LLAMADA = 180;
+const VERSION = 15;
+const SEGUNDOS_POR_LLAMADA = 300;
 
 const estado = {
   config: {
@@ -1380,34 +1380,63 @@ const ESQUEMA_VECINOS = {
 };
 
 function nombresUsados() {
+  return leerLista('vecinos-usados');
+}
+
+function leerLista(clave) {
   try {
-    return JSON.parse(localStorage.getItem('vecinos-usados') || '[]');
+    return JSON.parse(localStorage.getItem(clave) || '[]');
   } catch {
     return [];
   }
 }
 
+// El juego sortea los ingredientes de cada vecino (para que no salgan siempre
+// los mismos personajes) y Gemini arma la persona a partir de eso.
+function sortearSemillas() {
+  const oficiosUsados = leerLista('oficios-usados');
+  const libres = OFICIOS.filter((o) => !oficiosUsados.includes(o));
+  const oficios = mezclar(libres.length >= 3 ? libres : OFICIOS).slice(0, 3);
+  const manias = mezclar(MANIAS).slice(0, 3);
+  const situaciones = mezclar(SITUACIONES).slice(0, 3);
+  // Una persona joven, una de mediana edad y una grande, en cualquier orden.
+  const franjas = mezclar([[18, 32], [33, 55], [56, 85]]);
+  return [0, 1, 2].map((i) => ({
+    oficio: oficios[i],
+    mania: manias[i],
+    situacion: situaciones[i],
+    edad: franjas[i][0] + Math.floor(Math.random() * (franjas[i][1] - franjas[i][0] + 1)),
+    genero: Math.random() < 0.5 ? 'femenino' : 'masculino'
+  }));
+}
+
 async function generarVecinos(n) {
   const [minimo, maximo] = ahorrosDelDia(n);
   const usados = [...nombresUsados(), ...PERSONAJES.map((p) => p.nombre)];
+  const semillas = sortearSemillas();
+  const fichas = semillas.map((v, i) => `Vecino ${i + 1}: ${v.genero === 'femenino' ? 'mujer' : 'hombre'} de ${v.edad} años que ${v.oficio}, ${v.mania}. Cuando suena el teléfono, ${v.situacion}.`).join('\n');
   const lista = await pedirJSON({
     contents: [{ role: 'user', parts: [{ text: `Inventá 3 vecinos para el día ${n} de "El Cuento del Tío", un juego de humor ambientado en el barrio ficticio de Villa Chanta, Argentina.
 El jugador es un chanta que los llama por teléfono para sacarles plata con algún cuento. Cada vecino tiene un punto débil por donde se lo puede convencer.
 
-Cómo son los vecinos de este día: ${COMO_SON[tipoDeVecinos(n)]}
-Que sean bien distintos entre sí: mezclá edades (de 18 a 90), géneros, oficios, manías y formas de hablar. Humor de barrio argentino. Personajes inventados, nada de gente real ni famosos.
+Armá cada vecino a partir de estas fichas, respetando edad, género, oficio, manía y situación:
+${fichas}
+
+Actitud de los vecinos de este día: ${COMO_SON[tipoDeVecinos(n)]}
+Humor de barrio argentino, con formas de hablar bien distintas entre sí. Personajes inventados, nada de gente real ni famosos.
+Evitá estos personajes trillados: ${PERSONAJES_TRILLADOS.join(', ')}.
 No uses ninguno de estos nombres: ${usados.join(', ')}.
 
 Campos:
 - nombre: nombre y apellido (puede llevar apodo entre comillas, o "Don"/"Doña").
 - pista: una oración que dice quién es (la ve el jugador). No reveles su punto débil.
 - personalidad: cómo habla y cómo se comporta.
-- debilidad: su punto débil concreto.
-- saludo: cómo atiende el teléfono, en personaje, en una o dos oraciones cortas.
+- debilidad: su punto débil concreto. Que salga de su vida, su oficio o su manía, y que sea original (nada de horóscopos ni de nostalgia por los viejos tiempos).
+- saludo: cómo atiende el teléfono, en personaje y según lo que está haciendo en ese momento, en una o dos oraciones cortas.
 - estiloVoz: empieza con "Con acento argentino rioplatense," y describe el tono de voz.
 - ahorros: entre ${minimo} y ${maximo} pesos.` }] }],
     generationConfig: {
-      temperature: 1.1,
+      temperature: 1.2,
       responseMimeType: 'application/json',
       responseSchema: ESQUEMA_VECINOS
     }
@@ -1420,8 +1449,8 @@ Campos:
   const colores = mezclar(COLORES);
 
   const vecinos = lista.slice(0, 3).map((v, i) => {
-    const genero = v.genero === 'femenino' ? 'femenino' : 'masculino';
-    const edad = limitar(v.edad, 18, 95);
+    // Edad y género los sorteó el juego: no dejamos que Gemini los cambie.
+    const { genero, edad } = semillas[i];
     return {
       id: `ia-${Date.now()}-${i}`,
       nombre: texto(v.nombre, `Vecino ${i + 1}`),
@@ -1444,6 +1473,9 @@ Campos:
 
   const nuevos = [...nombresUsados(), ...vecinos.map((v) => v.nombre)].slice(-60);
   localStorage.setItem('vecinos-usados', JSON.stringify(nuevos));
+  // Los últimos oficios usados no se vuelven a sortear por un tiempo.
+  const oficios = [...leerLista('oficios-usados'), ...semillas.map((v) => v.oficio)].slice(-45);
+  localStorage.setItem('oficios-usados', JSON.stringify(oficios));
   return vecinos;
 }
 
