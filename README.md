@@ -27,7 +27,8 @@ El juego está pensado para jugarse en el celular, parado (en vertical).
 - En la lista de contactos ves qué se dice de cada vecino: ahí está la pista de su punto débil.
 - Si le tocás el punto débil, se va convenciendo. Los del primer día caen en pocas frases; los del tercero cuestan bastante más.
 - Tenés 3 minutos por llamada para convencerlos. Cuando se termina el tiempo, el vecino se despide y corta.
-- Si la sospecha llega al 100%, te denuncian. Con 3 denuncias, perdés.
+- Si la sospecha llega al 100%, el vecino se avivó y te corta.
+- Bardear a un vecino en broma vale: te contesta con humor.
 - Hay que llegar a la meta de plata al final de cada día.
 
 ## Voz

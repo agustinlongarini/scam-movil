@@ -1,6 +1,5 @@
-const VERSION = 9;
+const VERSION = 10;
 const SEGUNDOS_POR_LLAMADA = 180;
-const DENUNCIAS_MAXIMAS = 3;
 const DEUDA_TOTAL = DIAS[DIAS.length - 1].meta;
 
 const estado = {
@@ -13,7 +12,6 @@ const estado = {
   enJuego: false,
   dia: 0,
   plata: 0,
-  denuncias: 0,
   vecinosDelDia: [],
   llamados: new Set(),
   llamada: null,
@@ -129,7 +127,6 @@ function actualizarNotas() {
   $('nota-meta').textContent = formatoPlata(meta);
   $('nota-plata').textContent = `Tengo: ${formatoPlata(estado.plata)}`;
   $('nota-dia').textContent = estado.enJuego ? `Hoy, día ${estado.dia + 1} de ${DIAS.length}` : '';
-  $('nota-denuncias').textContent = estado.denuncias === 0 ? '—' : '/'.repeat(estado.denuncias);
   const l = estado.llamada;
   $('barra-sospecha').style.width = l ? `${l.sospecha}%` : '0';
   $('barra-confianza').style.width = l ? `${l.confianza}%` : '0';
@@ -306,7 +303,6 @@ function empezarJuego() {
   estado.enJuego = true;
   estado.dia = 0;
   estado.plata = 0;
-  estado.denuncias = 0;
   empezarDia();
 }
 
@@ -574,7 +570,7 @@ function enVivoEstado(l, nombre, args) {
     // Le avisamos al vecino para que lo diga en voz alta.
     l.sesion.enviarTexto(`(Ya te convenció del todo: decile que le das ${monto} pesos y despedite.)`);
   } else if (l.sospecha >= 100) {
-    l.finalPendiente = ['denuncia'];
+    l.finalPendiente = ['avivo'];
   } else if (args.cuelga === true) {
     l.finalPendiente = ['corto'];
   }
@@ -701,7 +697,7 @@ async function enviar(texto) {
     let final = null;
     if (r.paga > 0) final = ['pago', r.paga];
     else if (yaEstaConvencido(l)) final = ['pago', montoConvencido(l)];
-    else if (l.sospecha >= 100) final = ['denuncia'];
+    else if (l.sospecha >= 100) final = ['avivo'];
     else if (r.cuelga) final = ['corto'];
 
     if (final) {
@@ -756,11 +752,10 @@ function terminarLlamada(motivo, monto = 0) {
       vibrar([60, 50, 60, 50, 120]);
       texto = `${nombre} te dio ${formatoPlata(monto)}.`;
       break;
-    case 'denuncia':
-      estado.denuncias++;
-      titulo = '🚨 Te denunció';
-      vibrar(400);
-      texto = `${nombre} se avivó y llamó a la policía.`;
+    case 'avivo':
+      titulo = '🙄 Se avivó';
+      vibrar(300);
+      texto = `${nombre} se dio cuenta del cuento y te cortó.`;
       break;
     case 'corto':
       titulo = 'Te cortó';
@@ -768,7 +763,7 @@ function terminarLlamada(motivo, monto = 0) {
       break;
     case 'senal':
       titulo = 'Se cortó la llamada';
-      texto = `Se perdió la señal con ${nombre}. No pasa nada: no te denunció.`;
+      texto = `Se perdió la señal con ${nombre}.`;
       break;
     case 'tiempo':
       titulo = '⏱️ Se acabó el tiempo';
@@ -786,11 +781,6 @@ function terminarLlamada(motivo, monto = 0) {
 
 function despuesDeLlamada() {
   estado.llamada = null;
-  if (estado.denuncias >= DENUNCIAS_MAXIMAS) {
-    terminarJuego('Policía de Villa Chanta',
-      'Tenemos tres denuncias a su nombre. Quédese donde está, ya vamos para allá. 🚓');
-    return;
-  }
   const quedan = estado.vecinosDelDia.some((p) => !estado.llamados.has(p.id));
   if (quedan) mostrarContactos();
   else terminarDia();
@@ -994,6 +984,7 @@ function reglasDeJuego(p) {
 - Reaccioná como lo haría una persona real con tu personalidad: si el jugador toca tu punto débil con un cuento coherente y creíble, te vas convenciendo de a poco; si el cuento es flojo o no te interesa, no.
 - ${d.crédulo} Cada frase que toque tu punto débil sube tu confianza ${d.sube} puntos y baja tu sospecha.
 - Si el jugador es simpático o te sigue la corriente, la confianza sube un poco aunque no toque tu punto débil.
+- Si el jugador te insulta o te bardea en broma, no te ofendas en serio ni sospeches por eso: contestale con humor y, si va con tu personaje, devolvele un insulto cómico de barrio. Un insulto puede bajarte un poco la confianza, pero no te sube la sospecha.
 - La sospecha sube de a poco (como mucho 25 puntos por frase) cuando se contradice, apura, pide datos raros o exagera. Solo llega a 100 si te das cuenta clarísimo de que es una estafa.
 - Cuando tu confianza llega a ${d.confianza} o más y tu sospecha está en ${d.sospecha} o menos, pagás: le das una buena parte de tus ahorros (o todo, si estás muy convencido). Lo normal es que caigas ${d.frases} frases si el jugador lo hace bien.`;
 }
