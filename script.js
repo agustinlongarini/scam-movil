@@ -176,6 +176,7 @@ $('ajustes-listo').addEventListener('click', () => {
   localStorage.setItem('voz', c.voz);
   localStorage.setItem('gemini-modelo-voz', c.modeloVoz);
   vozGeminiFallo = false;
+  modeloQueAnda = null;
   if (estado.enJuego) mostrarContactos();
   else empezarJuego();
 });
@@ -397,7 +398,7 @@ async function enviar(texto) {
     escribiendo.remove();
     // La frase no cuenta: la sacamos para poder reintentar.
     l.historial.pop();
-    agregarBurbuja('error', `No se pudo hablar con Gemini: ${err.message}`);
+    agregarBurbuja('error', err.message);
     $('input-chat').value = texto;
     $('subtitulo').textContent = 'Se cortó la señal. Probá de nuevo.';
     $('subtitulo').className = 'subtitulo-texto';
@@ -769,7 +770,39 @@ async function llamarAGemini(modelo, cuerpo, segundos) {
 
 // Los modelos que "razonan" antes de contestar tardan mucho para una charla
 // por teléfono. Pedimos que no razonen; si el modelo no lo acepta, seguimos sin eso.
-let razonarSoportado = true;
+const razonarSoportado = {};
+
+async function pedirAlModelo(modelo, cuerpo) {
+  if (razonarSoportado[modelo] !== false) {
+    try {
+      const rapido = structuredClone(cuerpo);
+      rapido.generationConfig.thinkingConfig = { thinkingBudget: 0 };
+      return await llamarAGemini(modelo, rapido, 25);
+    } catch (err) {
+      if (err.estado !== 400 || /api key/i.test(err.message)) throw err;
+      razonarSoportado[modelo] = false;
+    }
+  }
+  return llamarAGemini(modelo, cuerpo, 40);
+}
+
+// Si el modelo elegido está saturado o sin cuota, probamos con otros.
+const MODELOS_DE_RESPALDO = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-flash-lite-latest', 'gemini-2.5-flash-lite'];
+let modeloQueAnda = null;
+
+const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function errorEnCastellano(err) {
+  if (!err) return new Error('algo salió mal');
+  if (err.estado === 503 || err.estado === 500) {
+    return new Error('Gemini está saturado en este momento. Probá de nuevo en un ratito.');
+  }
+  if (err.estado === 429) return new Error('Se terminó la cuota gratis de Gemini por ahora. Probá más tarde.');
+  if (err.estado === 401 || err.estado === 403 || /api key/i.test(err.message)) {
+    return new Error('La API key no es válida. Revisala en Ajustes.');
+  }
+  return err;
+}
 
 async function preguntarAGemini(p, historial) {
   const cuerpo = {
@@ -782,18 +815,31 @@ async function preguntarAGemini(p, historial) {
     }
   };
 
-  let datos;
-  if (razonarSoportado) {
-    try {
-      const rapido = structuredClone(cuerpo);
-      rapido.generationConfig.thinkingConfig = { thinkingBudget: 0 };
-      datos = await llamarAGemini(estado.config.modelo, rapido, 30);
-    } catch (err) {
-      if (err.estado !== 400) throw err;
-      razonarSoportado = false;
+  const modelos = [...new Set([modeloQueAnda, estado.config.modelo, ...MODELOS_DE_RESPALDO].filter(Boolean))];
+  let datos = null;
+  let ultimoError = null;
+
+  buscar:
+  for (const modelo of modelos) {
+    for (let intento = 0; intento < 2; intento++) {
+      try {
+        datos = await pedirAlModelo(modelo, cuerpo);
+        modeloQueAnda = modelo;
+        break buscar;
+      } catch (err) {
+        ultimoError = err;
+        // Una key mala no se arregla cambiando de modelo.
+        if (err.estado === 401 || err.estado === 403 || /api key/i.test(err.message)) throw errorEnCastellano(err);
+        // Si está saturado, un reintento rápido suele alcanzar; si no, pasamos al siguiente modelo.
+        if (err.estado === 503 && intento === 0) {
+          await esperar(1500);
+          continue;
+        }
+        break;
+      }
     }
   }
-  if (!datos) datos = await llamarAGemini(estado.config.modelo, cuerpo, 45);
+  if (!datos) throw errorEnCastellano(ultimoError);
 
   const texto = (datos.candidates?.[0]?.content?.parts || [])
     .filter((parte) => !parte.thought)
