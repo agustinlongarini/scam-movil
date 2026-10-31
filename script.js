@@ -1,5 +1,5 @@
-const VERSION = 8;
-const FRASES_POR_LLAMADA = 10;
+const VERSION = 9;
+const SEGUNDOS_POR_LLAMADA = 180;
 const DENUNCIAS_MAXIMAS = 3;
 const DEUDA_TOTAL = DIAS[DIAS.length - 1].meta;
 
@@ -397,7 +397,6 @@ function empezarLlamada(p) {
     ],
     sospecha: saludo.sospecha,
     confianza: saludo.confianza,
-    restantes: FRASES_POR_LLAMADA,
     pensamiento: '',
     esperando: false,
     terminada: false,
@@ -416,7 +415,8 @@ function empezarLlamada(p) {
   $('estado-mic').textContent = '';
   $('llamada-avatar').style.setProperty('--nivel', 0);
   $('chat').innerHTML = '';
-  actualizarFrases();
+  $('tiempo-restante').textContent = '';
+  $('tiempo-restante').classList.remove('poco');
   actualizarNotas();
   bloquearControles(true);
   mostrar('v-llamada');
@@ -534,7 +534,6 @@ function estadoMicrofono(texto) {
 
 function enVivoTuTexto(l, t) {
   if (estado.llamada !== l || l.terminada) return;
-  l.jugadorHablo = true;
   l.burbujaEllos = null;
   if (!l.burbujaVos) l.burbujaVos = agregarBurbuja('vos', '');
   l.burbujaVos.textContent = (l.burbujaVos.textContent + t).replace(/\s+/g, ' ').trimStart();
@@ -545,6 +544,7 @@ function enVivoTuTexto(l, t) {
 
 function enVivoSuTexto(l, t) {
   if (estado.llamada !== l || l.terminada) return;
+  if (l.tiempoAgotado) l.despedidaEmpezo = true;
   l.turnoEnCurso = true;
   l.burbujaVos = null;
   if (!l.burbujaEllos) l.burbujaEllos = agregarBurbuja('ellos', '');
@@ -588,13 +588,8 @@ function enVivoFinDeTurno(l) {
   l.turnoEnCurso = false;
   l.burbujaEllos = null;
   l.burbujaVos = null;
-  if (l.jugadorHablo) {
-    l.jugadorHablo = false;
-    l.restantes--;
-    actualizarFrases();
-    if (l.restantes <= 0 && !l.finalPendiente) l.finalPendiente = ['aburrido'];
-  }
-  if (l.finalPendiente) finalizarEnVivo(l);
+  // Si se acabó el tiempo, esperamos a que el vecino se despida.
+  if (l.finalPendiente && !(l.finalPendiente[0] === 'tiempo' && !l.despedidaEmpezo)) finalizarEnVivo(l);
 }
 
 async function finalizarEnVivo(l) {
@@ -614,16 +609,35 @@ function prepararBotonHablar() {
   $('etiqueta-hablar').textContent = enVivo ? 'silenciar' : 'hablar';
 }
 
+const minutosYSegundos = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+
 function actualizarDuracion() {
   const l = estado.llamada;
-  if (!l || !l.inicio) return;
+  if (!l || !l.inicio || l.terminada) return;
   const s = Math.floor((Date.now() - l.inicio) / 1000);
-  $('llamada-estado').textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  const quedan = Math.max(0, SEGUNDOS_POR_LLAMADA - s);
+  $('llamada-estado').textContent = minutosYSegundos(s);
+  $('tiempo-restante').textContent = `te quedan ${minutosYSegundos(quedan)}`;
+  $('tiempo-restante').classList.toggle('poco', quedan <= 30);
+  if (quedan === 0 && !l.tiempoAgotado) seAcaboElTiempo(l);
 }
 
-function actualizarFrases() {
-  const n = estado.llamada.restantes;
-  $('frases-restantes').textContent = `te quedan ${n} ${n === 1 ? 'frase' : 'frases'}`;
+// Cuando se termina el tiempo, el vecino se tiene que ir y corta.
+function seAcaboElTiempo(l) {
+  l.tiempoAgotado = true;
+  if (l.modo === 'vivo' && l.sesion) {
+    if (!l.finalPendiente) l.finalPendiente = ['tiempo'];
+    l.sesion.callar();
+    l.sesion.enviarTexto('(Se te terminó el tiempo: te tenés que ir ya. Despedite con una frase corta, en personaje, y cortá. No llames a actualizar_estado.)');
+    // Por si no llega a despedirse, cortamos igual.
+    setTimeout(() => finalizarEnVivo(l), 10000);
+    return;
+  }
+  l.terminada = true;
+  bloquearControles(true);
+  detenerEscucha(false);
+  dicenEllos('Uy, me tengo que ir. Chau, chau.');
+  esperarQueTermineDeHablar().then(() => terminarLlamada('tiempo'));
 }
 
 function bloquearControles(bloqueado) {
@@ -657,8 +671,7 @@ async function enviar(texto) {
     l.burbujaEllos = null;
     l.burbujaVos = null;
     agregarBurbuja('vos', texto);
-    l.jugadorHablo = true;
-    l.sesion.callar();
+      l.sesion.callar();
     l.sesion.enviarTexto(texto);
     $('subtitulo').textContent = texto;
     $('subtitulo').className = 'subtitulo-texto vos';
@@ -679,12 +692,10 @@ async function enviar(texto) {
     escribiendo.remove();
     if (estado.llamada !== l || l.terminada) return;
     l.historial.push({ role: 'model', parts: [{ text: JSON.stringify(r) }] });
-    l.restantes--;
     l.sospecha = r.sospecha;
     l.confianza = r.confianza;
     l.pensamiento = r.pensamiento;
     dicenEllos(r.respuesta);
-    actualizarFrases();
     actualizarNotas();
 
     let final = null;
@@ -692,7 +703,6 @@ async function enviar(texto) {
     else if (yaEstaConvencido(l)) final = ['pago', montoConvencido(l)];
     else if (l.sospecha >= 100) final = ['denuncia'];
     else if (r.cuelga) final = ['corto'];
-    else if (l.restantes <= 0) final = ['aburrido'];
 
     if (final) {
       l.terminada = true;
@@ -760,9 +770,9 @@ function terminarLlamada(motivo, monto = 0) {
       titulo = 'Se cortó la llamada';
       texto = `Se perdió la señal con ${nombre}. No pasa nada: no te denunció.`;
       break;
-    case 'aburrido':
-      titulo = 'Se aburrió';
-      texto = `Hablaste de más y ${nombre} cortó para ver la novela.`;
+    case 'tiempo':
+      titulo = '⏱️ Se acabó el tiempo';
+      texto = `${nombre} se tuvo que ir y te cortó.`;
       break;
     default:
       titulo = 'Cortaste';

@@ -676,6 +676,11 @@ button {
   animation: latido 1.2s infinite;
 }
 
+.frases.poco {
+  color: #ff6b61;
+  font-weight: 600;
+}
+
 @keyframes latido {
   50% { opacity: 0.35; }
 }
@@ -688,6 +693,8 @@ button {
 }
 
 .frases {
+  font-variant-numeric: tabular-nums;
+  transition: color 0.3s;
   margin: 0 0 18px;
   font-size: 13px;
   color: rgba(255, 255, 255, 0.55);
