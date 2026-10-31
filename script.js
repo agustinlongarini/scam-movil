@@ -59,6 +59,50 @@ $('alerta-boton').addEventListener('click', () => {
   if (accion) accion();
 });
 
+// ---------- Celular: alto visible, teclado y pantalla encendida ----------
+
+// En iPhone el teclado no achica la página: usamos el alto visible real
+// para que la barra de escribir quede siempre arriba del teclado.
+function ajustarAlto() {
+  const vv = window.visualViewport;
+  const alto = vv ? vv.height : window.innerHeight;
+  const raiz = document.documentElement.style;
+  raiz.setProperty('--alto-visible', `${alto}px`);
+  raiz.setProperty('--desplazamiento', `${vv ? vv.offsetTop : 0}px`);
+  document.body.classList.toggle('teclado-abierto', window.innerHeight - alto > 120);
+}
+ajustarAlto();
+window.addEventListener('resize', ajustarAlto);
+if (window.visualViewport) {
+  visualViewport.addEventListener('resize', ajustarAlto);
+  visualViewport.addEventListener('scroll', ajustarAlto);
+}
+
+// Que la pantalla no se apague en medio de una llamada.
+let bloqueoPantalla = null;
+
+async function mantenerPantallaEncendida(encendida) {
+  try {
+    if (encendida && !bloqueoPantalla && navigator.wakeLock) {
+      bloqueoPantalla = await navigator.wakeLock.request('screen');
+      bloqueoPantalla.addEventListener('release', () => { bloqueoPantalla = null; });
+    } else if (!encendida && bloqueoPantalla) {
+      await bloqueoPantalla.release();
+      bloqueoPantalla = null;
+    }
+  } catch {}
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && estado.llamada && !estado.llamada.terminada) {
+    mantenerPantallaEncendida(true);
+  }
+});
+
+function vibrar(patron) {
+  if (navigator.vibrate) navigator.vibrate(patron);
+}
+
 // ---------- Reloj ----------
 
 function actualizarReloj() {
@@ -116,6 +160,7 @@ $('abrir-ajustes').addEventListener('click', () => {
 });
 
 $('ajustes-listo').addEventListener('click', () => {
+  prepararAudio();
   const c = estado.config;
   c.apiKey = $('input-key').value.trim();
   c.modelo = $('input-modelo').value.trim() || 'gemini-flash-latest';
@@ -189,7 +234,10 @@ function mostrarContactos() {
     fila.querySelector('.avatar').textContent = iniciales(p.nombre);
     fila.querySelector('strong').textContent = p.nombre;
     fila.querySelector('.contacto-info span').textContent = p.pista;
-    fila.addEventListener('click', () => empezarLlamada(p));
+    fila.addEventListener('click', () => {
+      prepararAudio();
+      empezarLlamada(p);
+    });
     lista.appendChild(fila);
   });
 
@@ -257,6 +305,7 @@ function empezarLlamada(p) {
   actualizarNotas();
   bloquearControles(true);
   mostrar('v-llamada');
+  mantenerPantallaEncendida(true);
 
   // Unos segundos de "llamando…" antes de que atiendan.
   setTimeout(() => {
@@ -370,6 +419,7 @@ function terminarLlamada(motivo, monto = 0) {
   detenerEscucha(false);
   callarPersonaje();
   cerrarChat();
+  mantenerPantallaEncendida(false);
   $('llamada-estado').textContent = 'llamada finalizada';
 
   let titulo;
@@ -378,11 +428,13 @@ function terminarLlamada(motivo, monto = 0) {
     case 'pago':
       estado.plata += monto;
       titulo = '💸 ¡Cayó!';
+      vibrar([60, 50, 60, 50, 120]);
       texto = `${nombre} te dio ${formatoPlata(monto)}.`;
       break;
     case 'denuncia':
       estado.denuncias++;
       titulo = '🚨 Te denunció';
+      vibrar(400);
       texto = `${nombre} se avivó y llamó a la policía.`;
       break;
     case 'corto':
@@ -419,10 +471,13 @@ function despuesDeLlamada() {
 
 function cerrarChat() {
   $('hoja-chat').classList.remove('abierta');
+  document.body.classList.remove('chat-abierto');
+  $('input-chat').blur();
 }
 
 $('boton-chat').addEventListener('click', () => {
   $('hoja-chat').classList.add('abierta');
+  document.body.classList.add('chat-abierto');
   $('chat').scrollTop = $('chat').scrollHeight;
   setTimeout(() => $('input-chat').focus(), 300);
 });
@@ -434,6 +489,7 @@ $('form-chat').addEventListener('submit', (e) => {
   const texto = $('input-chat').value.trim();
   $('input-chat').value = '';
   enviar(texto);
+  $('input-chat').focus();
 });
 
 // ---------- Tu voz (reconocimiento del navegador) ----------
@@ -460,7 +516,7 @@ function empezarEscucha() {
   rec.lang = 'es-AR';
   rec.continuous = true;
   rec.interimResults = true;
-  escucha = { rec, texto: '', enviar: false };
+  escucha = { rec, texto: '', enviar: false, aMano: false };
 
   rec.onresult = (e) => {
     let final = '';
@@ -473,20 +529,30 @@ function empezarEscucha() {
     $('subtitulo').textContent = escucha.texto || 'te escucho…';
   };
   rec.onerror = (e) => {
-    if (e.error === 'not-allowed') {
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
       alerta('Sin permiso', 'Dale permiso al navegador para usar el micrófono, o escribí desde "mensajes".', '', null);
     }
   };
   rec.onend = () => {
-    const { texto, enviar: hayQueEnviar } = escucha || {};
+    // Si se cortó solo (silencio), lo dicho se envía igual.
+    const { texto, enviar: envioPedido, aMano } = escucha || {};
+    const hayQueEnviar = envioPedido || !aMano;
     escucha = null;
+    usarSesionDeAudio('playback');
     $('boton-hablar').classList.remove('grabando');
     $('etiqueta-hablar').textContent = 'hablar';
     if (hayQueEnviar && texto) enviar(texto);
     else if (estado.llamada && !estado.llamada.esperando) $('subtitulo').textContent = '';
   };
 
-  rec.start();
+  usarSesionDeAudio('play-and-record');
+  try {
+    rec.start();
+  } catch {
+    escucha = null;
+    return;
+  }
+  vibrar(30);
   $('boton-hablar').classList.add('grabando');
   $('etiqueta-hablar').textContent = 'enviar';
   $('subtitulo').textContent = 'te escucho…';
@@ -496,6 +562,7 @@ function empezarEscucha() {
 function detenerEscucha(enviarLoDicho) {
   if (!escucha) return;
   escucha.enviar = enviarLoDicho;
+  escucha.aMano = true;
   escucha.rec.stop();
 }
 
@@ -507,10 +574,25 @@ let vozGeminiFallo = false;
 let hablando = Promise.resolve();
 let altavoz = true;
 
+// En iPhone, con esto el audio suena aunque el celular esté en modo silencio.
+function usarSesionDeAudio(tipo) {
+  try {
+    if (navigator.audioSession) navigator.audioSession.type = tipo;
+  } catch {}
+}
+
 // El audio del navegador solo se puede habilitar tras un toque del usuario.
+let audioPreparado = false;
+
 function prepararAudio() {
+  usarSesionDeAudio('playback');
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (audioCtx.state === 'suspended') audioCtx.resume();
+  if (!audioPreparado && window.speechSynthesis) {
+    // iOS solo deja hablar al navegador si la primera vez fue tras un toque.
+    speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+    audioPreparado = true;
+  }
 }
 
 $('boton-altavoz').addEventListener('click', () => {

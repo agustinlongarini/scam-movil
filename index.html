@@ -3,7 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#3e2716">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Cuento del Tío">
+  <meta name="format-detection" content="telephone=no">
   <title>El Cuento del Tío</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="img/icono-192.png">
+  <link rel="apple-touch-icon" href="img/icono-180.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
@@ -79,11 +88,11 @@
             <div class="grupo">
               <label class="fila">
                 <span>API key</span>
-                <input type="password" id="input-key" placeholder="Obligatoria" autocomplete="off">
+                <input type="password" id="input-key" placeholder="Obligatoria" autocomplete="off" autocapitalize="off" spellcheck="false">
               </label>
               <label class="fila">
                 <span>Modelo</span>
-                <input type="text" id="input-modelo" value="gemini-flash-latest">
+                <input type="text" id="input-modelo" value="gemini-flash-latest" autocapitalize="off" autocorrect="off" spellcheck="false">
               </label>
             </div>
             <p class="grupo-pie">Conseguí la key gratis en <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>. Se guarda solo en este navegador.</p>
@@ -100,7 +109,7 @@
               </label>
               <label class="fila">
                 <span>Modelo de voz</span>
-                <input type="text" id="input-modelo-voz" value="gemini-2.5-flash-preview-tts">
+                <input type="text" id="input-modelo-voz" value="gemini-2.5-flash-preview-tts" autocapitalize="off" autocorrect="off" spellcheck="false">
               </label>
             </div>
             <p class="grupo-pie">Si la voz de Gemini falla, se usa la del navegador. Para hablar vos, usá Chrome, Edge o Safari.</p>
@@ -176,7 +185,7 @@
           </header>
           <div id="chat" class="chat"></div>
           <form id="form-chat" class="barra-escribir">
-            <input type="text" id="input-chat" placeholder="iMensaje" autocomplete="off" maxlength="300">
+            <input type="text" id="input-chat" placeholder="iMensaje" autocomplete="off" autocapitalize="sentences" enterkeyhint="send" maxlength="300">
             <button type="submit" id="boton-enviar" class="boton-enviar" aria-label="Enviar">
               <svg viewBox="0 0 24 24"><path d="M12 19V5M5.5 11.5 12 5l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
@@ -198,6 +207,11 @@
         <div class="indicador-home"></div>
       </div>
     </div>
+  </div>
+
+  <div class="girar">
+    <span>📱</span>
+    Girá el celular para jugar
   </div>
 
   <script src="personajes.js"></script>

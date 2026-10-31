@@ -11,6 +11,16 @@ Juego de humor para el navegador. Sos un chanta que le debe plata al Tano y ten�
 
 La key se guarda solo en tu navegador (`localStorage`) y se envía únicamente a la API de Google. No la escribas en el código ni la subas al repositorio.
 
+## Jugar en el celular
+
+El juego está pensado para jugarse en el celular, parado (en vertical).
+
+- Para que se vea a pantalla completa, como una app, agregalo a la pantalla de inicio:
+  - **iPhone (Safari):** botón Compartir → **Agregar a inicio**.
+  - **Android (Chrome):** menú ⋮ → **Instalar app** o **Agregar a la pantalla principal**.
+- Durante una llamada la pantalla no se apaga.
+- En iPhone, la voz de los vecinos suena aunque el celular esté en silencio (Safari 16.4 o más nuevo).
+
 ## Reglas
 
 - Cada día te tocan 3 vecinos, cada vez más difíciles.
@@ -29,3 +39,4 @@ La key se guarda solo en tu navegador (`localStorage`) y se envía únicamente a
 - `styles.css`: estilos.
 - `personajes.js`: los vecinos, sus voces y las metas de cada día. Acá podés agregar personajes nuevos.
 - `script.js`: lógica del juego, voz y conexión con Gemini.
+- `manifest.webmanifest` e `img/`: datos e íconos para instalarlo como app.
