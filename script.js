@@ -1,5 +1,5 @@
 const VERSION = 15;
-const SEGUNDOS_POR_LLAMADA = 180;
+const SEGUNDOS_POR_LLAMADA = 300;
 
 const estado = {
   config: {

@@ -28,7 +28,7 @@ El juego está pensado para jugarse en el celular, parado (en vertical).
 - Se guarda tu récord de días aguantados.
 - Cada día te tocan 3 vecinos. Gemini los inventa nuevos cada día (con un solo pedido) a partir de un oficio, una manía y una situación que sortea el juego, y no repite nombres ni oficios recientes. Si preferís, en Ajustes podés jugar siempre con los 9 vecinos de siempre, que también se usan si Gemini falla.
 - Para sacarles plata hay que trabajarlos: primero desconfían, después preguntan y negocian, y recién pagan cuando aceptan un monto. Descubrir su punto débil es parte del juego.
-- Tenés 3 minutos por llamada para convencerlos. Cuando se termina el tiempo, el vecino se despide y corta.
+- Tenés 5 minutos por llamada para convencerlos. Cuando se termina el tiempo, el vecino se despide y corta.
 - Si la sospecha llega al 100%, el vecino se avivó y te corta.
 - Bardear a un vecino en broma vale: te contesta con humor.
 
