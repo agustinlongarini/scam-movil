@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=7">
+  <link rel="stylesheet" href="styles.css?v=12">
 </head>
 <body>
   <div class="escritorio">
@@ -25,15 +25,10 @@
     <!-- Corcho con los post-its: el estado de la partida -->
     <aside class="corcho">
       <div class="postit amarillo">
-        <h3>Le debo al Tano</h3>
+        <h3>Hoy el Tano quiere</h3>
         <p id="nota-meta" class="grande">$50.000</p>
         <p id="nota-plata">Tengo: $0</p>
         <p id="nota-dia"></p>
-      </div>
-      <div class="postit rosa">
-        <h3>Denuncias</h3>
-        <p id="nota-denuncias" class="palitos"></p>
-        <p class="chico">3 y voy en cana</p>
       </div>
       <div class="postit celeste">
         <h3>¿Cómo viene?</h3>
@@ -114,12 +109,24 @@
             </div>
             <p class="grupo-pie">En vivo hablás y el vecino te contesta con su voz, sin límite diario. Si no conecta, la llamada sigue sola en modo clásico (texto, unas 500 frases por día y voz del navegador). Los modelos se eligen solos según tu cuenta.</p>
             <p id="ajustes-error" class="error-ios"></p>
+            <p class="grupo-titulo">VECINOS</p>
+            <div class="grupo">
+              <label class="fila">
+                <span>Vecinos</span>
+                <select id="input-vecinos">
+                  <option value="ia">Nuevos cada día</option>
+                  <option value="fijos">Siempre los mismos</option>
+                </select>
+              </label>
+            </div>
+            <p class="grupo-pie">Con "Nuevos cada día", Gemini inventa 3 vecinos distintos al empezar cada día. Usa un solo pedido por día.</p>
+
             <p class="grupo-titulo">DIAGNÓSTICO</p>
             <div class="grupo">
               <button id="copiar-diagnostico" class="fila fila-boton azul">Copiar diagnóstico</button>
             </div>
             <pre id="diagnostico" class="diagnostico"></pre>
-            <p class="grupo-pie version">Versión 7</p>
+            <p class="grupo-pie version">Versión 12</p>
           </div>
         </section>
 
@@ -135,6 +142,7 @@
             <p id="contactos-meta" class="subtitulo-ios"></p>
             <p class="grupo-titulo">PARA LLAMAR HOY</p>
             <div id="lista-contactos" class="grupo"></div>
+            <p id="aviso-vecinos" class="grupo-pie"></p>
             <div class="grupo">
               <button id="terminar-dia" class="fila fila-boton rojo">Terminar el día</button>
             </div>
@@ -154,7 +162,7 @@
             <p id="subtitulo" class="subtitulo-texto"></p>
           </div>
 
-          <p id="frases-restantes" class="frases"></p>
+          <p id="tiempo-restante" class="frases"></p>
           <p id="estado-mic" class="estado-mic"></p>
 
           <div class="botonera">
@@ -221,8 +229,8 @@
     Girá el celular para jugar
   </div>
 
-  <script src="personajes.js?v=7"></script>
-  <script src="en-vivo.js?v=7"></script>
-  <script src="script.js?v=7"></script>
+  <script src="personajes.js?v=12"></script>
+  <script src="en-vivo.js?v=12"></script>
+  <script src="script.js?v=12"></script>
 </body>
 </html>

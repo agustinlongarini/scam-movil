@@ -1,6 +1,6 @@
 # 📞 El Cuento del Tío
 
-Juego de humor para el navegador. Sos un chanta que le debe plata al Tano y tenés tres días para juntarla llamando por teléfono a los vecinos de Villa Chanta. Cada vecino lo interpreta una IA (Gemini) con su propia personalidad, su voz y su punto débil.
+Juego de humor para el navegador. Sos un chanta que le debe plata al Tano y todas las noches tenés que pagarle, llamando por teléfono a los vecinos de Villa Chanta para sacarles plata. Cada vecino lo interpreta una IA (Gemini) con su propia personalidad, su voz y su punto débil.
 
 ## Cómo jugar
 
@@ -23,10 +23,14 @@ El juego está pensado para jugarse en el celular, parado (en vertical).
 
 ## Reglas
 
-- Cada día te tocan 3 vecinos, cada vez más difíciles.
-- Tenés 10 frases por llamada para convencerlos.
-- Si la sospecha llega al 100%, te denuncian. Con 3 denuncias, perdés.
-- Hay que llegar a la meta de plata al final de cada día.
+- Los días no terminan nunca: cada noche el Tano pasa a cobrar. Si tenés la plata, se la lleva y seguís con lo que te sobró. El día que no llegás, perdés.
+- Cada día el Tano pide un 35 % más ($4.000 el primer día, unos $13.500 el quinto, $59.500 el décimo) y los vecinos son más difíciles de convencer.
+- Se guarda tu récord de días aguantados.
+- Cada día te tocan 3 vecinos. Gemini los inventa nuevos cada día (con un solo pedido) y no repite nombres. Si preferís, en Ajustes podés jugar siempre con los 9 vecinos de siempre, que también se usan si Gemini falla.
+- En la lista de contactos ves qué se dice de cada vecino: ahí está la pista de su punto débil.
+- Tenés 3 minutos por llamada para convencerlos. Cuando se termina el tiempo, el vecino se despide y corta.
+- Si la sospecha llega al 100%, el vecino se avivó y te corta.
+- Bardear a un vecino en broma vale: te contesta con humor.
 
 ## Voz
 
@@ -41,7 +45,7 @@ Los modelos se eligen solos: el juego le pregunta a tu cuenta de Google cuáles 
 
 - `index.html`: el escritorio, el corcho y el iPhone con sus pantallas.
 - `styles.css`: estilos.
-- `personajes.js`: los vecinos, sus voces y las metas de cada día. Acá podés agregar personajes nuevos.
+- `personajes.js`: los 9 vecinos de siempre (también son el respaldo si Gemini no puede inventar nuevos).
 - `script.js`: lógica del juego, modo clásico y elección de modelos.
 - `en-vivo.js`: llamada en tiempo real con Gemini Live.
 - `captura-audio.js`: pasa el micrófono al formato que pide Gemini Live.
