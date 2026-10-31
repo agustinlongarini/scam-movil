@@ -37,7 +37,11 @@ class LlamadaEnVivo {
     this.salida = this.ctx.createGain();
     this.finDeAudioMs = 0;
     this.diag = [];
-    this.cuenta = { enviados: 0, bloqueados: 0, silenciados: 0, tuTexto: 0, suTexto: 0, audio: 0, herramientas: 0, turnos: 0 };
+    this.cuenta = { enviados: 0, bloqueados: 0, silenciados: 0, tuTexto: 0, suTexto: 0, audio: 0, herramientas: 0, turnos: 0, repetidos: 0 };
+    // Gemini a veces contesta, llama a la función y vuelve a decir lo mismo.
+    // Después de una respuesta, descartamos todo lo que diga hasta que el jugador hable.
+    this.yaContesto = false;
+    this.descartando = false;
     this.inicioMs = performance.now();
     this.log(`modelo ${this.o.modelo}, voz ${this.o.voz}, audio ${this.ctx.sampleRate} Hz (${this.ctx.state})`);
     this.log(navigator.userAgent);
@@ -62,7 +66,7 @@ class LlamadaEnVivo {
     return [
       ...this.diag,
       `resumen: micrófono enviado ${c.enviados} trozos (bloqueados mientras habla el vecino: ${c.bloqueados}, silenciado: ${c.silenciados}); ` +
-      `transcripciones tuyas ${c.tuTexto}, del vecino ${c.suTexto}; audios ${c.audio}; funciones ${c.herramientas}; turnos ${c.turnos}`
+      `transcripciones tuyas ${c.tuTexto}, del vecino ${c.suTexto}; audios ${c.audio}; funciones ${c.herramientas}; turnos ${c.turnos}; repeticiones descartadas ${c.repetidos}`
     ].join('\n');
   }
 
@@ -131,8 +135,15 @@ class LlamadaEnVivo {
   }
 
   // Le habla al vecino por escrito (el chat, o indicaciones del juego).
+  // El jugador dijo o escribió algo: el vecino puede volver a contestar.
+  nuevaEntrada() {
+    this.yaContesto = false;
+    this.descartando = false;
+  }
+
   enviarTexto(texto) {
     this.log(`texto enviado: ${texto.slice(0, 60)}`);
+    this.nuevaEntrada();
     // Va por el mismo canal que el audio: los modelos Live nuevos solo aceptan
     // "clientContent" para cargar historial al empezar.
     this.enviar({ realtimeInput: { text: texto } });
@@ -147,7 +158,7 @@ class LlamadaEnVivo {
       const pista = this.stream.getAudioTracks()[0];
       this.log(`micrófono abierto: ${pista?.label || 'sin nombre'} ${JSON.stringify(pista?.getSettings?.() || {})}`);
       if (!LlamadaEnVivo.capturaCargada) {
-        await this.ctx.audioWorklet.addModule('captura-audio.js?v=15');
+        await this.ctx.audioWorklet.addModule('captura-audio.js?v=16');
         LlamadaEnVivo.capturaCargada = true;
       }
       if (this.cerrada) return this.cerrarMicrofono();
@@ -174,6 +185,9 @@ class LlamadaEnVivo {
         } else {
           estado = 'enviando';
           this.cuenta.enviados++;
+          // Voz sostenida (unos 0,3 s) cuenta como que el jugador habló; un ruido suelto, no.
+          this.trozosConVoz = nivel > 0.12 ? (this.trozosConVoz || 0) + 1 : 0;
+          if (this.trozosConVoz >= 3) this.nuevaEntrada();
           if (this.cuenta.enviados === 1) this.log('primer audio del micrófono enviado');
           this.enviar({ realtimeInput: { audio: { data: aBase64(e.data), mimeType: 'audio/pcm;rate=16000' } } });
         }
@@ -227,6 +241,7 @@ class LlamadaEnVivo {
     }
     if (msj.toolCall) {
       this.cuenta.herramientas++;
+      if (this.yaContesto) this.descartando = true;
       this.log(`función: ${JSON.stringify(msj.toolCall.functionCalls || []).slice(0, 200)}`);
       const respuestas = (msj.toolCall.functionCalls || []).map((llamada) => {
         // El juego puede contestarle al vecino (por ejemplo, "todavía no pagues").
@@ -245,20 +260,29 @@ class LlamadaEnVivo {
       this.callar();
     }
     if (c.inputTranscription?.text) {
+      this.nuevaEntrada();
       if (!this.cuenta.tuTexto) this.log('Gemini escuchó tu voz por primera vez');
       this.cuenta.tuTexto++;
       this.ev.onTuTexto(c.inputTranscription.text);
     }
-    if (c.outputTranscription?.text) {
-      this.cuenta.suTexto++;
-      this.ev.onSuTexto(c.outputTranscription.text);
-    }
-
-    for (const parte of c.modelTurn?.parts || []) {
-      if (parte.inlineData?.data) this.reproducir(parte.inlineData.data, parte.inlineData.mimeType);
+    const hayRespuesta = c.outputTranscription?.text || (c.modelTurn?.parts || []).some((p) => p.inlineData?.data);
+    if (hayRespuesta && this.descartando) {
+      // Es una repetición de lo que ya dijo: no la mostramos ni la reproducimos.
+      if (!this.cuenta.repetidos) this.log('el vecino repitió su respuesta: la descarto');
+      this.cuenta.repetidos++;
+    } else if (hayRespuesta) {
+      this.yaContesto = true;
+      if (c.outputTranscription?.text) {
+        this.cuenta.suTexto++;
+        this.ev.onSuTexto(c.outputTranscription.text);
+      }
+      for (const parte of c.modelTurn?.parts || []) {
+        if (parte.inlineData?.data) this.reproducir(parte.inlineData.data, parte.inlineData.mimeType);
+      }
     }
 
     if (c.turnComplete) {
+      if (this.yaContesto) this.descartando = true;
       this.cuenta.turnos++;
       this.ev.onFinDeTurno();
     }

@@ -1,4 +1,4 @@
-const VERSION = 15;
+const VERSION = 16;
 const SEGUNDOS_POR_LLAMADA = 300;
 
 const estado = {
