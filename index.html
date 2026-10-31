@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=5">
+  <link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body>
   <div class="escritorio">
@@ -91,31 +91,30 @@
                 <span>API key</span>
                 <input type="password" id="input-key" placeholder="Obligatoria" autocomplete="off" autocapitalize="off" spellcheck="false">
               </label>
-              <label class="fila">
-                <span>Modelo</span>
-                <input type="text" id="input-modelo" value="gemini-flash-latest" autocapitalize="off" autocorrect="off" spellcheck="false">
-              </label>
             </div>
             <p class="grupo-pie">Conseguí la key gratis en <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>. Se guarda solo en este navegador.</p>
 
-            <p class="grupo-titulo">VOZ DE LOS VECINOS</p>
+            <p class="grupo-titulo">LLAMADAS</p>
             <div class="grupo">
               <label class="fila">
-                <span>Voz</span>
-                <select id="input-voz">
-                  <option value="gemini">Gemini (más real)</option>
-                  <option value="navegador">Navegador (gratis)</option>
-                  <option value="ninguna">Sin voz</option>
+                <span>Modo</span>
+                <select id="input-modo">
+                  <option value="vivo">En vivo (voz real)</option>
+                  <option value="clasico">Clásico (texto)</option>
                 </select>
               </label>
-              <label class="fila">
-                <span>Modelo de voz</span>
-                <input type="text" id="input-modelo-voz" value="gemini-2.5-flash-preview-tts" autocapitalize="off" autocorrect="off" spellcheck="false">
-              </label>
+              <div class="fila">
+                <span>Modelo en vivo</span>
+                <span id="modelo-vivo" class="valor">—</span>
+              </div>
+              <div class="fila">
+                <span>Modelo de texto</span>
+                <span id="modelo-texto" class="valor">—</span>
+              </div>
             </div>
-            <p class="grupo-pie">Si la voz de Gemini falla, se usa la del navegador. Para hablar vos, usá Chrome, Edge o Safari.</p>
+            <p class="grupo-pie">En vivo hablás y el vecino te contesta con su voz, sin límite diario. Si no conecta, la llamada sigue sola en modo clásico (texto, unas 500 frases por día y voz del navegador). Los modelos se eligen solos según tu cuenta.</p>
             <p id="ajustes-error" class="error-ios"></p>
-            <p class="grupo-pie version">Versión 5</p>
+            <p class="grupo-pie version">Versión 6</p>
           </div>
         </section>
 
@@ -216,7 +215,8 @@
     Girá el celular para jugar
   </div>
 
-  <script src="personajes.js?v=5"></script>
-  <script src="script.js?v=5"></script>
+  <script src="personajes.js?v=6"></script>
+  <script src="en-vivo.js?v=6"></script>
+  <script src="script.js?v=6"></script>
 </body>
 </html>
