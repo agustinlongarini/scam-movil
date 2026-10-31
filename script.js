@@ -358,7 +358,7 @@ async function enviar(texto) {
 
   callarPersonaje();
   agregarBurbuja('vos', texto);
-  $('subtitulo').textContent = 'escuchando…';
+  $('subtitulo').textContent = 'pensando…';
   $('subtitulo').className = 'subtitulo-texto pensando';
   l.historial.push({ role: 'user', parts: [{ text: texto }] });
   l.esperando = true;
@@ -398,6 +398,7 @@ async function enviar(texto) {
     // La frase no cuenta: la sacamos para poder reintentar.
     l.historial.pop();
     agregarBurbuja('error', `No se pudo hablar con Gemini: ${err.message}`);
+    $('input-chat').value = texto;
     $('subtitulo').textContent = 'Se cortó la señal. Probá de nuevo.';
     $('subtitulo').className = 'subtitulo-texto';
     l.esperando = false;
@@ -514,18 +515,13 @@ function empezarEscucha() {
   callarPersonaje();
   const rec = new Reconocimiento();
   rec.lang = 'es-AR';
-  rec.continuous = true;
+  // Una frase por vez: cuando hacés una pausa, se envía sola.
+  rec.continuous = false;
   rec.interimResults = true;
   escucha = { rec, texto: '', enviar: false, aMano: false };
 
   rec.onresult = (e) => {
-    let final = '';
-    let parcial = '';
-    for (const resultado of e.results) {
-      if (resultado.isFinal) final += resultado[0].transcript;
-      else parcial += resultado[0].transcript;
-    }
-    escucha.texto = (final + parcial).trim();
+    escucha.texto = unirResultados(e.results);
     $('subtitulo').textContent = escucha.texto || 'te escucho…';
   };
   rec.onerror = (e) => {
@@ -557,6 +553,21 @@ function empezarEscucha() {
   $('etiqueta-hablar').textContent = 'enviar';
   $('subtitulo').textContent = 'te escucho…';
   $('subtitulo').className = 'subtitulo-texto vos';
+}
+
+// Chrome de Android a veces entrega cada versión parcial como un resultado aparte
+// ("Hola", "Hola señor", "Hola señor cómo está"): si un resultado repite el
+// anterior y lo amplía, lo reemplaza en vez de sumarse.
+function unirResultados(resultados) {
+  let texto = '';
+  for (const resultado of resultados) {
+    const parte = resultado[0].transcript.trim();
+    if (!parte) continue;
+    const anterior = texto.toLowerCase();
+    if (parte.toLowerCase().startsWith(anterior)) texto = parte;
+    else if (!anterior.endsWith(parte.toLowerCase())) texto = `${texto} ${parte}`;
+  }
+  return texto.trim();
 }
 
 function detenerEscucha(enviarLoDicho) {
@@ -630,20 +641,13 @@ function callarPersonaje() {
 }
 
 async function vozGemini(p, texto) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(estado.config.modeloVoz)}:generateContent`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': estado.config.apiKey },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: `${p.estiloVoz}, como si hablara por teléfono, decí: ${texto}` }] }],
-      generationConfig: {
-        responseModalities: ['AUDIO'],
-        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: p.voz } } }
-      }
-    })
-  });
-  if (!res.ok) throw new Error(`error ${res.status}`);
-  const datos = await res.json();
+  const datos = await llamarAGemini(estado.config.modeloVoz, {
+    contents: [{ parts: [{ text: `${p.estiloVoz}, como si hablara por teléfono, decí: ${texto}` }] }],
+    generationConfig: {
+      responseModalities: ['AUDIO'],
+      speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: p.voz } } }
+    }
+  }, 20);
   const parte = datos.candidates?.[0]?.content?.parts?.find((x) => x.inlineData);
   if (!parte) throw new Error('sin audio');
   // Si mientras tanto el jugador ya habló o cortó, no reproducimos.
@@ -735,28 +739,62 @@ const ESQUEMA = {
   required: ['respuesta', 'sospecha', 'confianza', 'paga', 'cuelga', 'pensamiento']
 };
 
-async function preguntarAGemini(p, historial) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(estado.config.modelo)}:generateContent`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': estado.config.apiKey },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: instrucciones(p) }] },
-      contents: historial,
-      generationConfig: {
-        temperature: 0.9,
-        responseMimeType: 'application/json',
-        responseSchema: ESQUEMA
-      }
-    })
-  });
-
+// Llama a la API de Gemini con un límite de tiempo, para no quedar esperando para siempre.
+async function llamarAGemini(modelo, cuerpo, segundos) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelo)}:generateContent`;
+  const control = new AbortController();
+  const limite = setTimeout(() => control.abort(), segundos * 1000);
+  let res;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': estado.config.apiKey },
+      body: JSON.stringify(cuerpo),
+      signal: control.signal
+    });
+  } catch (err) {
+    if (err.name === 'AbortError') throw new Error('tardó demasiado en contestar');
+    throw new Error('no hay conexión');
+  } finally {
+    clearTimeout(limite);
+  }
   if (!res.ok) {
     const error = await res.json().catch(() => null);
-    throw new Error(error?.error?.message || `error ${res.status}`);
+    const e = new Error(error?.error?.message || `error ${res.status}`);
+    e.estado = res.status;
+    throw e;
   }
+  return res.json();
+}
 
-  const datos = await res.json();
+// Los modelos que "razonan" antes de contestar tardan mucho para una charla
+// por teléfono. Pedimos que no razonen; si el modelo no lo acepta, seguimos sin eso.
+let razonarSoportado = true;
+
+async function preguntarAGemini(p, historial) {
+  const cuerpo = {
+    systemInstruction: { parts: [{ text: instrucciones(p) }] },
+    contents: historial,
+    generationConfig: {
+      temperature: 0.9,
+      responseMimeType: 'application/json',
+      responseSchema: ESQUEMA
+    }
+  };
+
+  let datos;
+  if (razonarSoportado) {
+    try {
+      const rapido = structuredClone(cuerpo);
+      rapido.generationConfig.thinkingConfig = { thinkingBudget: 0 };
+      datos = await llamarAGemini(estado.config.modelo, rapido, 30);
+    } catch (err) {
+      if (err.estado !== 400) throw err;
+      razonarSoportado = false;
+    }
+  }
+  if (!datos) datos = await llamarAGemini(estado.config.modelo, cuerpo, 45);
+
   const texto = (datos.candidates?.[0]?.content?.parts || [])
     .filter((parte) => !parte.thought)
     .map((parte) => parte.text || '')
