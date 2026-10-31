@@ -1,6 +1,5 @@
-const VERSION = 11;
+const VERSION = 12;
 const SEGUNDOS_POR_LLAMADA = 180;
-const DEUDA_TOTAL = DIAS[DIAS.length - 1].meta;
 
 const estado = {
   config: {
@@ -124,13 +123,49 @@ function actualizarReloj() {
 actualizarReloj();
 setInterval(actualizarReloj, 10000);
 
+// ---------- Días sin fin: cada noche el Tano cobra, y cada día pide más ----------
+
+const redondear = (n) => Math.round(n / 500) * 500;
+
+// Lo que cobra el Tano la noche del día n (1, 2, 3…): un 35 % más cada día.
+const cuotaDelDia = (n) => redondear(4000 * 1.35 ** (n - 1));
+
+// Qué tipo de vecinos aparecen: 1 crédulos, 2 desconfiados, 3 avivados.
+const tipoDeVecinos = (n) => (n <= 2 ? 1 : n <= 4 ? 2 : 3);
+
+// Ahorros de los vecinos: crecen con la cuota para que siempre se pueda llegar.
+const ahorrosDelDia = (n) => [redondear(cuotaDelDia(n) * 0.5), redondear(cuotaDelDia(n) * 1.1)];
+
+// Qué tan fácil cae un vecino el día n.
+function dificultadDelDia(n) {
+  const tipo = tipoDeVecinos(n);
+  return {
+    confianza: Math.min(85, 55 + 5 * n),
+    sospecha: Math.max(25, 55 - 5 * n),
+    frases: ['entre 3 y 5', 'entre 5 y 7', 'entre 6 y 9'][tipo - 1],
+    sube: ['entre 15 y 30', 'entre 10 y 20', 'entre 5 y 15'][tipo - 1],
+    crédulo: [
+      'Sos muy crédulo y te entusiasmás fácil.',
+      'Sos desconfiado, pero tenés tu lado blando.',
+      'Sos muy difícil de engañar, aunque no imposible.'
+    ][tipo - 1]
+  };
+}
+
+const diaActual = () => estado.dia + 1;
+
+function record() {
+  return Number(localStorage.getItem('record-dias')) || 0;
+}
+
 // ---------- Post-its ----------
 
 function actualizarNotas() {
-  const meta = estado.enJuego ? DIAS[estado.dia].meta : DEUDA_TOTAL;
-  $('nota-meta').textContent = formatoPlata(meta);
+  $('nota-meta').textContent = formatoPlata(cuotaDelDia(estado.enJuego ? diaActual() : 1));
   $('nota-plata').textContent = `Tengo: ${formatoPlata(estado.plata)}`;
-  $('nota-dia').textContent = estado.enJuego ? `Hoy, día ${estado.dia + 1} de ${DIAS.length}` : '';
+  $('nota-dia').textContent = estado.enJuego
+    ? `Día ${diaActual()}${record() ? ` · récord: ${record()}` : ''}`
+    : (record() ? `Récord: ${record()} días` : '');
   const l = estado.llamada;
   $('barra-sospecha').style.width = l ? `${l.sospecha}%` : '0';
   $('barra-confianza').style.width = l ? `${l.confianza}%` : '0';
@@ -310,16 +345,26 @@ function empezarJuego() {
   estado.enJuego = true;
   estado.dia = 0;
   estado.plata = 0;
+  estado.recordAnterior = record();
   empezarDia();
 }
 
 async function empezarDia() {
-  const dificultad = estado.dia + 1;
+  const n = diaActual();
   const dia = estado.dia;
   estado.llamados = new Set();
   estado.llamada = null;
   estado.avisoVecinos = '';
-  const deSiempre = () => mezclar(PERSONAJES.filter((p) => p.dificultad === dificultad));
+  // Los vecinos de siempre, con ahorros acordes al día.
+  const deSiempre = () => {
+    const [minimo, maximo] = ahorrosDelDia(n);
+    return mezclar(PERSONAJES.filter((p) => p.dificultad === tipoDeVecinos(n))).map((p) => ({
+      ...p,
+      id: `${p.id}-${n}`,
+      dia: n,
+      ahorros: redondear(minimo + Math.random() * (maximo - minimo))
+    }));
+  };
 
   if (estado.config.vecinos !== 'ia') {
     estado.vecinosDelDia = deSiempre();
@@ -332,7 +377,7 @@ async function empezarDia() {
   mostrarContactos();
   let vecinos;
   try {
-    vecinos = await generarVecinos(dificultad);
+    vecinos = await generarVecinos(n);
   } catch (err) {
     console.warn('No se pudieron inventar vecinos:', err);
     vecinos = deSiempre();
@@ -345,9 +390,9 @@ async function empezarDia() {
 }
 
 function mostrarContactos() {
-  const meta = DIAS[estado.dia].meta;
+  const meta = cuotaDelDia(diaActual());
   const falta = Math.max(0, meta - estado.plata);
-  $('contactos-titulo').textContent = `Día ${estado.dia + 1}`;
+  $('contactos-titulo').textContent = `Día ${diaActual()}`;
   $('contactos-meta').textContent = falta > 0
     ? `El Tano quiere ver ${formatoPlata(meta)} esta noche. Te faltan ${formatoPlata(falta)}.`
     : `Ya juntaste lo de hoy. Podés seguir llamando o terminar el día.`;
@@ -392,19 +437,22 @@ function mostrarContactos() {
 $('terminar-dia').addEventListener('click', terminarDia);
 
 function terminarDia() {
-  if (estado.plata < DIAS[estado.dia].meta) {
+  const cuota = cuotaDelDia(diaActual());
+  if (estado.plata < cuota) {
+    const aguantados = estado.dia;
+    const nuevoRecord = aguantados > estado.recordAnterior;
+    const dias = aguantados === 1 ? '1 día' : `${aguantados} días`;
     terminarJuego('El Tano',
-      `Vine a cobrar y tenías ${formatoPlata(estado.plata)}. Desde mañana me lavás el auto. Por diez años.`);
+      `Vine a cobrar ${formatoPlata(cuota)} y tenías ${formatoPlata(estado.plata)}. Desde mañana me lavás el auto. ` +
+      `Aguantaste ${dias}. ${nuevoRecord ? '¡Nuevo récord!' : `Tu récord: ${record()}.`}`);
     return;
   }
+  estado.plata -= cuota;
   estado.dia++;
-  if (estado.dia >= DIAS.length) {
-    terminarJuego('El Tano',
-      `Recibí los ${formatoPlata(estado.plata)}. Sos un artista, pibe. Estamos a mano. 🤝`);
-    return;
-  }
-  alerta(`Terminó el día ${estado.dia}`,
-    `Llegaste a la meta. Mañana el Tano quiere ver ${formatoPlata(DIAS[estado.dia].meta)}.`,
+  if (estado.dia > record()) localStorage.setItem('record-dias', estado.dia);
+  actualizarNotas();
+  alerta(`🤌 El Tano cobró`,
+    `Se llevó ${formatoPlata(cuota)} y te quedaron ${formatoPlata(estado.plata)}. Mañana quiere ${formatoPlata(cuotaDelDia(diaActual()))}.`,
     '', empezarDia);
 }
 
@@ -460,7 +508,7 @@ function empezarLlamada(p) {
 // Los modelos de IA tienden a no soltar nunca la plata. Si el vecino ya está
 // convencido del todo dos frases seguidas, el juego hace que pague.
 function yaEstaConvencido(l) {
-  const d = DIFICULTAD[l.personaje.dificultad];
+  const d = dificultadDelDia(l.personaje.dia);
   const convencido = l.confianza >= d.confianza + 10 && l.sospecha <= d.sospecha - 10;
   l.vecesConvencido = convencido ? (l.vecesConvencido || 0) + 1 : 0;
   return l.vecesConvencido >= 2;
@@ -1006,15 +1054,8 @@ function vozNavegador(p, texto) {
 
 // ---------- Gemini: el vecino piensa y responde ----------
 
-// Qué tan fácil cae cada vecino según el día en que aparece.
-const DIFICULTAD = {
-  1: { confianza: 60, sospecha: 50, frases: 'entre 3 y 5', sube: 'entre 15 y 30', crédulo: 'Sos muy crédulo y te entusiasmás fácil.' },
-  2: { confianza: 70, sospecha: 40, frases: 'entre 5 y 7', sube: 'entre 10 y 20', crédulo: 'Sos desconfiado, pero tenés tu lado blando.' },
-  3: { confianza: 80, sospecha: 30, frases: 'entre 6 y 9', sube: 'entre 5 y 15', crédulo: 'Sos muy difícil de engañar, aunque no imposible.' }
-};
-
 function reglasDeJuego(p) {
-  const d = DIFICULTAD[p.dificultad];
+  const d = dificultadDelDia(p.dia);
   return `Cómo funciona el juego (no lo digas nunca):
 - Reaccioná como lo haría una persona real con tu personalidad: si el jugador toca tu punto débil con un cuento coherente y creíble, te vas convenciendo de a poco; si el cuento es flojo o no te interesa, no.
 - ${d.crédulo} Cada frase que toque tu punto débil sube tu confianza ${d.sube} puntos y baja tu sospecha.
@@ -1225,7 +1266,6 @@ const VOCES = {
   femenino: ['Kore', 'Aoede', 'Gacrux', 'Leda', 'Zephyr', 'Sulafat', 'Achernar', 'Despina', 'Autonoe', 'Vindemiatrix']
 };
 const COLORES = ['#c9772b', '#3f7d4f', '#9b6a8f', '#8a5a3c', '#b0546a', '#3e6a8a', '#5b6470', '#7a3b3b', '#2f4a5c', '#6b7a2f', '#a0522d', '#4b5d8a'];
-const AHORROS = { 1: [3000, 8000], 2: [8000, 16000], 3: [15000, 30000] };
 const COMO_SON = {
   1: 'Crédulos y fáciles de entusiasmar. El rumor deja bastante clara su debilidad.',
   2: 'Desconfiados, pero con su lado blando. El rumor da una pista indirecta de su debilidad.',
@@ -1260,14 +1300,14 @@ function nombresUsados() {
   }
 }
 
-async function generarVecinos(dificultad) {
-  const [minimo, maximo] = AHORROS[dificultad];
+async function generarVecinos(n) {
+  const [minimo, maximo] = ahorrosDelDia(n);
   const usados = [...nombresUsados(), ...PERSONAJES.map((p) => p.nombre)];
   const lista = await pedirJSON({
-    contents: [{ role: 'user', parts: [{ text: `Inventá 3 vecinos para el día ${dificultad} de "El Cuento del Tío", un juego de humor ambientado en el barrio ficticio de Villa Chanta, Argentina.
+    contents: [{ role: 'user', parts: [{ text: `Inventá 3 vecinos para el día ${n} de "El Cuento del Tío", un juego de humor ambientado en el barrio ficticio de Villa Chanta, Argentina.
 El jugador es un chanta que los llama por teléfono para sacarles plata con algún cuento. Cada vecino tiene un punto débil por donde se lo puede convencer.
 
-Cómo son los vecinos de este día: ${COMO_SON[dificultad]}
+Cómo son los vecinos de este día: ${COMO_SON[tipoDeVecinos(n)]}
 Que sean bien distintos entre sí: mezclá edades (de 18 a 90), géneros, oficios, manías y formas de hablar. Humor de barrio argentino. Personajes inventados, nada de gente real ni famosos.
 No uses ninguno de estos nombres: ${usados.join(', ')}.
 
@@ -1300,7 +1340,8 @@ Campos:
       id: `ia-${Date.now()}-${i}`,
       nombre: texto(v.nombre, `Vecino ${i + 1}`),
       edad,
-      dificultad,
+      dificultad: tipoDeVecinos(n),
+      dia: n,
       ahorros: limitar(v.ahorros, minimo, maximo),
       pista: texto(v.pista, 'Un vecino del barrio.'),
       rumor: texto(v.rumor, 'Dicen que es bastante particular.'),
@@ -1324,4 +1365,4 @@ Campos:
 // ---------- Arranque ----------
 
 pantallaBloqueo('El Tano',
-  `Me debés ${formatoPlata(DEUDA_TOTAL)}. Tenés tres días. No me hagas ir a buscarte.`);
+  'Desde hoy me pagás todas las noches, y cada día un poco más. El día que no llegues, olvidate.');

@@ -1,4 +1,5 @@
-// Vecinos de Villa Chanta. "dificultad" decide en qué día aparecen (1, 2 o 3).
+// Vecinos de siempre de Villa Chanta (también son el respaldo si Gemini no puede inventar nuevos).
+// "dificultad" es el tipo de vecino: 1 crédulo, 2 desconfiado, 3 avivado.
 // "personalidad" y "debilidad" solo las ve la IA; "pista" y "rumor" son lo que ve el jugador.
 // "voz" y "estiloVoz" son para la voz de Gemini; "tono" y "velocidad", para la voz del navegador.
 const PERSONAJES = [
@@ -155,11 +156,4 @@ const PERSONAJES = [
     debilidad: 'Extraña la acción. Si le proponen una "misión secreta" o ayudar en un caso, se entusiasma.',
     saludo: 'Benítez al habla. ¿Quién es y de dónde sacó este número?'
   }
-];
-
-// Meta acumulada que hay que alcanzar al final de cada día.
-const DIAS = [
-  { meta: 6000 },
-  { meta: 20000 },
-  { meta: 50000 }
 ];
