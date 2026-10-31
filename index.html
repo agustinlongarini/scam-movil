@@ -2,106 +2,204 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>El Cuento del Tío</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <main id="app">
+  <div class="escritorio">
 
-    <!-- Pantalla de inicio -->
-    <section id="pantalla-inicio" class="pantalla">
-      <h1>📞 El Cuento del Tío</h1>
-      <p class="subtitulo">Sos un chanta de poca monta y le debés plata al Tano.
-        Tenés tres días para juntarla llamando a los vecinos de Villa Chanta
-        y convenciéndolos de que te den sus ahorros.</p>
-
-      <div class="reglas">
-        <h2>Cómo se juega</h2>
-        <ul>
-          <li>Cada día te tocan 3 vecinos. Elegí a quién llamar.</li>
-          <li>Escribí lo que le decís. Del otro lado contesta una IA que actúa el personaje.</li>
-          <li>Si le encontrás el punto débil, confía más. Si exagerás, sospecha.</li>
-          <li>Si la sospecha llega al 100%, te cuelga y te denuncia. Con 3 denuncias, caés preso.</li>
-          <li>Tenés 10 mensajes por llamada. Llegá a la meta de cada día para seguir jugando.</li>
-        </ul>
-        <p class="aviso">Es un juego de humor: los personajes y las estafas son ficticios.</p>
+    <!-- Corcho con los post-its: el estado de la partida -->
+    <aside class="corcho">
+      <div class="postit amarillo">
+        <h3>Le debo al Tano</h3>
+        <p id="nota-meta" class="grande">$50.000</p>
+        <p id="nota-plata">Tengo: $0</p>
+        <p id="nota-dia"></p>
       </div>
-
-      <form id="form-config" class="config">
-        <label>
-          API key de Gemini
-          <input type="password" id="input-key" placeholder="Pegá tu API key acá" autocomplete="off" required>
-        </label>
-        <label>
-          Modelo
-          <input type="text" id="input-modelo" value="gemini-flash-latest" required>
-        </label>
-        <p class="nota">La key se guarda solo en este navegador y se envía únicamente a Google.
-          Conseguila gratis en <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>.</p>
-        <button type="submit" class="boton">Empezar</button>
-      </form>
-    </section>
-
-    <!-- Elegir a quién llamar -->
-    <section id="pantalla-dia" class="pantalla oculto">
-      <div class="barra-estado">
-        <span id="estado-dia"></span>
-        <span id="estado-plata"></span>
-        <span id="estado-calor"></span>
+      <div class="postit rosa">
+        <h3>Denuncias</h3>
+        <p id="nota-denuncias" class="palitos"></p>
+        <p class="chico">3 y voy en cana</p>
       </div>
-      <p id="texto-meta" class="meta"></p>
-      <div id="lista-vecinos" class="vecinos"></div>
-      <button id="boton-terminar-dia" class="boton secundario">Terminar el día</button>
-    </section>
-
-    <!-- Llamada -->
-    <section id="pantalla-llamada" class="pantalla oculto">
-      <div class="cabecera-llamada">
-        <span id="llamada-emoji" class="emoji-grande"></span>
-        <div>
-          <h2 id="llamada-nombre"></h2>
-          <p id="llamada-pista" class="pista"></p>
-        </div>
-      </div>
-
-      <div class="medidores">
-        <div class="medidor">
+      <div class="postit celeste">
+        <h3>¿Cómo viene?</h3>
+        <div class="lectura">
           <span>Sospecha</span>
-          <div class="barra"><div id="barra-sospecha" class="relleno sospecha"></div></div>
-        </div>
-        <div class="medidor">
+          <div class="trazo"><div id="barra-sospecha" class="tinta roja"></div></div>
           <span>Confianza</span>
-          <div class="barra"><div id="barra-confianza" class="relleno confianza"></div></div>
+          <div class="trazo"><div id="barra-confianza" class="tinta verde"></div></div>
         </div>
-        <span id="mensajes-restantes" class="restantes"></span>
       </div>
+    </aside>
 
-      <div id="chat" class="chat"></div>
+    <!-- El teléfono -->
+    <div class="iphone">
+      <div class="boton-lateral izq1"></div>
+      <div class="boton-lateral izq2"></div>
+      <div class="boton-lateral der"></div>
+      <div class="pantalla-telefono">
+        <div class="isla"></div>
 
-      <form id="form-mensaje" class="form-mensaje">
-        <input type="text" id="input-mensaje" placeholder="¿Qué le decís?" autocomplete="off" maxlength="300">
-        <button type="submit" class="boton" id="boton-enviar">Enviar</button>
-      </form>
-      <button id="boton-colgar" class="boton peligro">Colgar</button>
-    </section>
+        <div class="barra-ios">
+          <span id="hora">9:41</span>
+          <span class="iconos-estado">
+            <svg viewBox="0 0 18 12" width="18" height="12"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+            <svg viewBox="0 0 16 12" width="16" height="12"><path d="M8 2.2c2.4 0 4.6.9 6.2 2.5l1.3-1.3A10.6 10.6 0 0 0 8 .4 10.6 10.6 0 0 0 .5 3.4l1.3 1.3A8.8 8.8 0 0 1 8 2.2zm0 3.6c1.4 0 2.7.5 3.7 1.5L13 6a7 7 0 0 0-10 0l1.3 1.3c1-1 2.3-1.5 3.7-1.5zM8 9.4c-.5 0-1 .2-1.3.5L8 11.2l1.3-1.3c-.3-.3-.8-.5-1.3-.5z"/></svg>
+            <span class="bateria"><span></span></span>
+          </span>
+        </div>
 
-    <!-- Resultado de una llamada -->
-    <section id="pantalla-resultado" class="pantalla oculto">
-      <h2 id="resultado-titulo"></h2>
-      <p id="resultado-texto"></p>
-      <blockquote id="resultado-pensamiento" class="pensamiento"></blockquote>
-      <button id="boton-volver" class="boton">Seguir</button>
-    </section>
+        <!-- Pantalla bloqueada -->
+        <section id="v-bloqueo" class="vista bloqueo">
+          <p id="bloqueo-fecha" class="bloqueo-fecha"></p>
+          <p id="bloqueo-hora" class="bloqueo-hora"></p>
+          <button id="notificacion" class="notificacion">
+            <span class="app-icono">💬</span>
+            <span class="notif-cuerpo">
+              <span class="notif-cabecera"><strong id="notif-titulo">El Tano</strong><span>ahora</span></span>
+              <span id="notif-texto"></span>
+            </span>
+          </button>
+          <p class="bloqueo-pie">Tocá la notificación para empezar</p>
+        </section>
 
-    <!-- Fin del juego -->
-    <section id="pantalla-fin" class="pantalla oculto">
-      <h1 id="fin-titulo"></h1>
-      <p id="fin-texto"></p>
-      <button id="boton-reiniciar" class="boton">Jugar de nuevo</button>
-    </section>
+        <!-- Ajustes -->
+        <section id="v-ajustes" class="vista ios-claro">
+          <header class="nav-ios">
+            <span></span>
+            <span class="nav-titulo">Ajustes</span>
+            <button id="ajustes-listo" class="nav-boton">Listo</button>
+          </header>
+          <div class="contenido-scroll">
+            <p class="grupo-titulo">GEMINI</p>
+            <div class="grupo">
+              <label class="fila">
+                <span>API key</span>
+                <input type="password" id="input-key" placeholder="Obligatoria" autocomplete="off">
+              </label>
+              <label class="fila">
+                <span>Modelo</span>
+                <input type="text" id="input-modelo" value="gemini-flash-latest">
+              </label>
+            </div>
+            <p class="grupo-pie">Conseguí la key gratis en <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>. Se guarda solo en este navegador.</p>
 
-  </main>
+            <p class="grupo-titulo">VOZ DE LOS VECINOS</p>
+            <div class="grupo">
+              <label class="fila">
+                <span>Voz</span>
+                <select id="input-voz">
+                  <option value="gemini">Gemini (más real)</option>
+                  <option value="navegador">Navegador (gratis)</option>
+                  <option value="ninguna">Sin voz</option>
+                </select>
+              </label>
+              <label class="fila">
+                <span>Modelo de voz</span>
+                <input type="text" id="input-modelo-voz" value="gemini-2.5-flash-preview-tts">
+              </label>
+            </div>
+            <p class="grupo-pie">Si la voz de Gemini falla, se usa la del navegador. Para hablar vos, usá Chrome, Edge o Safari.</p>
+            <p id="ajustes-error" class="error-ios"></p>
+          </div>
+        </section>
+
+        <!-- Contactos del día -->
+        <section id="v-contactos" class="vista ios-claro">
+          <header class="nav-ios">
+            <span></span>
+            <span></span>
+            <button id="abrir-ajustes" class="nav-boton">Ajustes</button>
+          </header>
+          <div class="contenido-scroll">
+            <h1 id="contactos-titulo" class="titulo-grande">Día 1</h1>
+            <p id="contactos-meta" class="subtitulo-ios"></p>
+            <p class="grupo-titulo">PARA LLAMAR HOY</p>
+            <div id="lista-contactos" class="grupo"></div>
+            <div class="grupo">
+              <button id="terminar-dia" class="fila fila-boton rojo">Terminar el día</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Llamada -->
+        <section id="v-llamada" class="vista llamada">
+          <div class="llamada-arriba">
+            <p id="llamada-estado" class="llamada-estado">llamando…</p>
+            <h2 id="llamada-nombre" class="llamada-nombre"></h2>
+          </div>
+
+          <div id="llamada-avatar" class="avatar avatar-enorme"></div>
+
+          <div class="subtitulos">
+            <p id="subtitulo" class="subtitulo-texto"></p>
+          </div>
+
+          <p id="frases-restantes" class="frases"></p>
+
+          <div class="botonera">
+            <button id="boton-hablar" class="boton-redondo">
+              <span class="circulo">
+                <svg viewBox="0 0 24 24"><rect x="9" y="2.5" width="6" height="12" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              </span>
+              <span id="etiqueta-hablar">hablar</span>
+            </button>
+            <button id="boton-chat" class="boton-redondo">
+              <span class="circulo">
+                <svg viewBox="0 0 24 24"><path d="M12 3.5c-5 0-9 3.4-9 7.6 0 2.3 1.2 4.3 3 5.7l-.8 3.7 4.3-2.2c.8.2 1.6.3 2.5.3 5 0 9-3.4 9-7.5s-4-7.6-9-7.6z"/></svg>
+              </span>
+              <span>mensajes</span>
+            </button>
+            <button id="boton-altavoz" class="boton-redondo activo">
+              <span class="circulo">
+                <svg viewBox="0 0 24 24"><path d="M3.5 9h4l5-4.5v15l-5-4.5h-4z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.7 5.8a8.8 8.8 0 0 1 0 12.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              </span>
+              <span>altavoz</span>
+            </button>
+          </div>
+
+          <button id="boton-cortar" class="boton-cortar" aria-label="Cortar">
+            <svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08a.956.956 0 0 1-.29-.7c0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28a11.27 11.27 0 0 0-2.67-1.85.996.996 0 0 1-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg>
+          </button>
+        </section>
+
+        <!-- Hoja de mensajes (chat escrito) -->
+        <div id="hoja-chat" class="hoja">
+          <header class="hoja-cabecera">
+            <span id="chat-avatar" class="avatar avatar-mini"></span>
+            <span id="chat-nombre" class="hoja-nombre"></span>
+            <button id="cerrar-chat" class="nav-boton">Listo</button>
+          </header>
+          <div id="chat" class="chat"></div>
+          <form id="form-chat" class="barra-escribir">
+            <input type="text" id="input-chat" placeholder="iMensaje" autocomplete="off" maxlength="300">
+            <button type="submit" id="boton-enviar" class="boton-enviar" aria-label="Enviar">
+              <svg viewBox="0 0 24 24"><path d="M12 19V5M5.5 11.5 12 5l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </form>
+        </div>
+
+        <!-- Alerta estilo iOS -->
+        <div id="alerta" class="velo oculto">
+          <div class="alerta">
+            <div class="alerta-cuerpo">
+              <h3 id="alerta-titulo"></h3>
+              <p id="alerta-texto"></p>
+              <p id="alerta-pensamiento" class="alerta-pensamiento"></p>
+            </div>
+            <button id="alerta-boton" class="alerta-boton">Seguir</button>
+          </div>
+        </div>
+
+        <div class="indicador-home"></div>
+      </div>
+    </div>
+  </div>
+
   <script src="personajes.js"></script>
   <script src="script.js"></script>
 </body>
