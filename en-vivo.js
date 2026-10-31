@@ -147,7 +147,7 @@ class LlamadaEnVivo {
       const pista = this.stream.getAudioTracks()[0];
       this.log(`micrófono abierto: ${pista?.label || 'sin nombre'} ${JSON.stringify(pista?.getSettings?.() || {})}`);
       if (!LlamadaEnVivo.capturaCargada) {
-        await this.ctx.audioWorklet.addModule('captura-audio.js?v=13');
+        await this.ctx.audioWorklet.addModule('captura-audio.js?v=14');
         LlamadaEnVivo.capturaCargada = true;
       }
       if (this.cerrada) return this.cerrarMicrofono();

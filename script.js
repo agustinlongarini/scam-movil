@@ -1,4 +1,4 @@
-const VERSION = 13;
+const VERSION = 14;
 const SEGUNDOS_POR_LLAMADA = 180;
 
 const estado = {
@@ -215,7 +215,13 @@ function nombreCorto(modelo) {
 
 function cargarAjustes() {
   const c = estado.config;
-  $('diagnostico').textContent = localStorage.getItem('diagnostico') || 'Todavía no hiciste ninguna llamada en vivo.';
+  $('diagnostico').textContent = [
+    'LLAMADA EN VIVO',
+    localStorage.getItem('diagnostico') || 'Todavía no hiciste ninguna llamada en vivo.',
+    '',
+    `PEDIDOS DE TEXTO (modelo: ${estado.config.modeloTexto || '—'})`,
+    localStorage.getItem('diagnostico-texto') || 'Todavía no hubo pedidos de texto.'
+  ].join('\n');
   $('input-key').value = c.apiKey;
   $('input-modo').value = c.modo;
   $('input-vecinos').value = c.vecinos;
@@ -350,6 +356,23 @@ function empezarJuego() {
   empezarDia();
 }
 
+// Inventamos los vecinos por adelantado (los del día 1 mientras ves la pantalla
+// de inicio, los de mañana mientras jugás hoy) para que la agenda aparezca al instante.
+const vecinosPreparados = {};
+
+function prepararVecinos(n) {
+  const c = estado.config;
+  if (c.vecinos !== 'ia' || !c.apiKey || !c.modeloTexto) return null;
+  if (!vecinosPreparados[n]) {
+    vecinosPreparados[n] = generarVecinos(n);
+    // Si falla, lo olvidamos para poder volver a intentarlo.
+    vecinosPreparados[n].catch(() => { delete vecinosPreparados[n]; });
+  }
+  return vecinosPreparados[n];
+}
+
+const ESPERA_MAXIMA_VECINOS = 15000;
+
 async function empezarDia() {
   const n = diaActual();
   const dia = estado.dia;
@@ -378,16 +401,24 @@ async function empezarDia() {
   mostrarContactos();
   let vecinos;
   try {
-    vecinos = await generarVecinos(n);
+    const preparados = prepararVecinos(n) || Promise.reject(new Error('faltan los modelos'));
+    vecinos = await Promise.race([
+      preparados,
+      esperar(ESPERA_MAXIMA_VECINOS).then(() => { throw new Error('Gemini tardó demasiado'); })
+    ]);
   } catch (err) {
     console.warn('No se pudieron inventar vecinos:', err);
+    registrarTexto(`vecinos del día ${n}: ${err.message}`);
     vecinos = deSiempre();
     estado.avisoVecinos = `No pude inventar vecinos nuevos (${err.message}). Hoy llamás a los de siempre.`;
   }
+  delete vecinosPreparados[n];
   if (estado.dia !== dia || !estado.enJuego) return;
   estado.buscandoVecinos = false;
   estado.vecinosDelDia = vecinos;
   mostrarContactos();
+  // Mientras jugás hoy, vamos inventando los de mañana.
+  prepararVecinos(n + 1);
 }
 
 function mostrarContactos() {
@@ -458,6 +489,7 @@ function terminarDia() {
 function terminarJuego(remitente, texto) {
   estado.enJuego = false;
   estado.llamada = null;
+  prepararVecinos(1);
   pantallaBloqueo(remitente, texto + ' (Tocá para jugar de nuevo)');
 }
 
@@ -1204,22 +1236,40 @@ async function llamarAGemini(modelo, cuerpo, segundos) {
   return res.json();
 }
 
-// Los modelos que "razonan" antes de contestar tardan mucho para una charla
-// por teléfono. Pedimos que no razonen; si el modelo no lo acepta, seguimos sin eso.
-const razonarSoportado = {};
+// Los modelos que "razonan" antes de contestar tardan mucho. Cada versión de
+// Gemini se lo pide distinto, así que probamos hasta encontrar la que acepta
+// y la recordamos.
+const SIN_RAZONAR = [{ thinkingLevel: 'minimal' }, { thinkingLevel: 'low' }, { thinkingBudget: 0 }, null];
+const formaQueAnda = JSON.parse(localStorage.getItem('forma-sin-razonar') || '{}');
 
 async function pedirAlModelo(modelo, cuerpo) {
-  if (razonarSoportado[modelo] !== false) {
+  for (let i = formaQueAnda[modelo] ?? 0; i < SIN_RAZONAR.length; i++) {
+    const pedido = structuredClone(cuerpo);
+    if (SIN_RAZONAR[i]) pedido.generationConfig.thinkingConfig = SIN_RAZONAR[i];
+    const inicio = performance.now();
     try {
-      const rapido = structuredClone(cuerpo);
-      rapido.generationConfig.thinkingConfig = { thinkingBudget: 0 };
-      return await llamarAGemini(modelo, rapido, 25);
+      const datos = await llamarAGemini(modelo, pedido, 25);
+      registrarTexto(`${modelo} ${JSON.stringify(SIN_RAZONAR[i])}: ok en ${Math.round(performance.now() - inicio)} ms`);
+      if (formaQueAnda[modelo] !== i) {
+        formaQueAnda[modelo] = i;
+        localStorage.setItem('forma-sin-razonar', JSON.stringify(formaQueAnda));
+      }
+      return datos;
     } catch (err) {
-      if (err.estado !== 400 || /api key/i.test(err.message)) throw err;
-      razonarSoportado[modelo] = false;
+      registrarTexto(`${modelo} ${JSON.stringify(SIN_RAZONAR[i])}: ${err.estado || ''} ${err.message.slice(0, 100)} (${Math.round(performance.now() - inicio)} ms)`);
+      // Solo probamos otra forma si el modelo rechazó la opción (error 400).
+      if (err.estado !== 400 || /api key/i.test(err.message) || i === SIN_RAZONAR.length - 1) throw err;
     }
   }
-  return llamarAGemini(modelo, cuerpo, 40);
+  throw new Error('el modelo no respondió');
+}
+
+// Registro de los pedidos de texto, para el diagnóstico de Ajustes.
+function registrarTexto(linea) {
+  const hora = new Date().toLocaleTimeString('es-AR', { hourCycle: 'h23' });
+  let lineas = (localStorage.getItem('diagnostico-texto') || '').split('\n').filter(Boolean);
+  lineas = [...lineas, `[${hora}] ${linea}`].slice(-30);
+  localStorage.setItem('diagnostico-texto', lineas.join('\n'));
 }
 
 // Si el modelo elegido está saturado o sin cuota, probamos con otros.
@@ -1398,6 +1448,9 @@ Campos:
 }
 
 // ---------- Arranque ----------
+
+// Si ya hay key, vamos inventando los vecinos del día 1 mientras ves la pantalla de inicio.
+prepararVecinos(1);
 
 pantallaBloqueo('El Tano',
   'Desde hoy me pagás todas las noches, y cada día un poco más. El día que no llegues, olvidate.');
