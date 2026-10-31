@@ -498,6 +498,26 @@ button {
   justify-content: center;
 }
 
+.fila-boton.azul {
+  color: var(--ios-azul);
+}
+
+.diagnostico {
+  max-height: 160px;
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  overflow: auto;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 10px;
+  line-height: 1.4;
+  color: #3c3c43;
+  white-space: pre-wrap;
+  word-break: break-word;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 .fila-boton.rojo {
   color: var(--ios-rojo);
 }
@@ -608,6 +628,9 @@ button {
 }
 
 .avatar-enorme {
+  --nivel: 0;
+  box-shadow: 0 0 0 calc(var(--nivel) * 22px) rgba(255, 255, 255, 0.22);
+  transition: box-shadow 0.1s linear;
   width: 116px;
   height: 116px;
   margin-top: 26px;
@@ -648,6 +671,13 @@ button {
 
 @keyframes latido {
   50% { opacity: 0.35; }
+}
+
+.estado-mic {
+  min-height: 18px;
+  margin: -12px 0 14px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .frases {

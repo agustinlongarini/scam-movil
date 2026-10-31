@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=6">
+  <link rel="stylesheet" href="styles.css?v=7">
 </head>
 <body>
   <div class="escritorio">
@@ -114,7 +114,12 @@
             </div>
             <p class="grupo-pie">En vivo hablás y el vecino te contesta con su voz, sin límite diario. Si no conecta, la llamada sigue sola en modo clásico (texto, unas 500 frases por día y voz del navegador). Los modelos se eligen solos según tu cuenta.</p>
             <p id="ajustes-error" class="error-ios"></p>
-            <p class="grupo-pie version">Versión 6</p>
+            <p class="grupo-titulo">DIAGNÓSTICO</p>
+            <div class="grupo">
+              <button id="copiar-diagnostico" class="fila fila-boton azul">Copiar diagnóstico</button>
+            </div>
+            <pre id="diagnostico" class="diagnostico"></pre>
+            <p class="grupo-pie version">Versión 7</p>
           </div>
         </section>
 
@@ -150,6 +155,7 @@
           </div>
 
           <p id="frases-restantes" class="frases"></p>
+          <p id="estado-mic" class="estado-mic"></p>
 
           <div class="botonera">
             <button id="boton-hablar" class="boton-redondo">
@@ -215,8 +221,8 @@
     Girá el celular para jugar
   </div>
 
-  <script src="personajes.js?v=6"></script>
-  <script src="en-vivo.js?v=6"></script>
-  <script src="script.js?v=6"></script>
+  <script src="personajes.js?v=7"></script>
+  <script src="en-vivo.js?v=7"></script>
+  <script src="script.js?v=7"></script>
 </body>
 </html>

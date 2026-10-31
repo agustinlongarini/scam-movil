@@ -1,3 +1,4 @@
+const VERSION = 7;
 const FRASES_POR_LLAMADA = 10;
 const DENUNCIAS_MAXIMAS = 3;
 const DEUDA_TOTAL = DIAS[DIAS.length - 1].meta;
@@ -177,12 +178,29 @@ function nombreCorto(modelo) {
 
 function cargarAjustes() {
   const c = estado.config;
+  $('diagnostico').textContent = localStorage.getItem('diagnostico') || 'Todavía no hiciste ninguna llamada en vivo.';
   $('input-key').value = c.apiKey;
   $('input-modo').value = c.modo;
   $('modelo-vivo').textContent = nombreCorto(c.modeloVivo);
   $('modelo-texto').textContent = nombreCorto(c.modeloTexto);
 }
 cargarAjustes();
+
+$('copiar-diagnostico').addEventListener('click', async () => {
+  const texto = `Versión ${VERSION}\n${$('diagnostico').textContent}`;
+  try {
+    await navigator.clipboard.writeText(texto);
+    $('copiar-diagnostico').textContent = 'Copiado ✓';
+  } catch {
+    // Si el navegador no deja copiar, seleccionamos el texto para copiarlo a mano.
+    const rango = document.createRange();
+    rango.selectNodeContents($('diagnostico'));
+    getSelection().removeAllRanges();
+    getSelection().addRange(rango);
+    $('copiar-diagnostico').textContent = 'Seleccionado: copialo a mano';
+  }
+  setTimeout(() => { $('copiar-diagnostico').textContent = 'Copiar diagnóstico'; }, 2500);
+});
 
 $('abrir-ajustes').addEventListener('click', () => {
   cargarAjustes();
@@ -393,6 +411,8 @@ function empezarLlamada(p) {
   $('chat-nombre').textContent = p.nombre;
   $('llamada-estado').textContent = 'llamando…';
   $('subtitulo').textContent = '';
+  $('estado-mic').textContent = '';
+  $('llamada-avatar').style.setProperty('--nivel', 0);
   $('chat').innerHTML = '';
   actualizarFrases();
   actualizarNotas();
@@ -450,10 +470,20 @@ async function empezarEnVivo(l) {
         l.terminada = true;
         terminarLlamada('senal');
       },
-      onMicrofono: (ok) => {
-        if (!ok) {
-          $('subtitulo').textContent = 'No pude usar el micrófono. Dale permiso al navegador o escribile desde "mensajes".';
-        }
+      onMicrofono: (ok, err) => {
+        if (ok || estado.llamada !== l || l.terminada) return;
+        estadoMicrofono('sin micrófono');
+        const permiso = err && (err.name === 'NotAllowedError' || err.name === 'SecurityError');
+        alerta('No te escucho',
+          permiso
+            ? 'El navegador no dio permiso para usar el micrófono. Tocá el candado al lado de la dirección, permití el micrófono y volvé a llamar. Mientras tanto podés escribirle desde "mensajes".'
+            : `No pude usar el micrófono (${err ? err.message : 'error desconocido'}). Podés escribirle desde "mensajes".`,
+          '', null);
+      },
+      onNivel: (nivel, estadoMic) => {
+        if (estado.llamada !== l || l.terminada) return;
+        $('llamada-avatar').style.setProperty('--nivel', estadoMic === 'enviando' ? nivel.toFixed(2) : 0);
+        estadoMicrofono({ enviando: 'te escucho', vecino: 'habla el vecino…', silenciado: 'micrófono silenciado' }[estadoMic]);
       }
     }
   });
@@ -479,6 +509,10 @@ async function empezarEnVivo(l) {
   sesion.altavoz(altavoz);
   sesion.enviarTexto(`(Suena tu teléfono y atendés. Saludá en personaje, por ejemplo: "${p.saludo}". Para este saludo no llames a actualizar_estado.)`);
   sesion.abrirMicrofono();
+}
+
+function estadoMicrofono(texto) {
+  if ($('estado-mic').textContent !== texto) $('estado-mic').textContent = texto;
 }
 
 function enVivoTuTexto(l, t) {
@@ -668,6 +702,8 @@ function terminarLlamada(motivo, monto = 0) {
   callarPersonaje();
   if (l.sesion) l.sesion.cerrar();
   usarSesionDeAudio('playback');
+  $('estado-mic').textContent = '';
+  $('llamada-avatar').style.setProperty('--nivel', 0);
   cerrarChat();
   mantenerPantallaEncendida(false);
   $('llamada-estado').textContent = 'llamada finalizada';
