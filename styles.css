@@ -1,0 +1,1204 @@
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+  --ios-azul: #0a7aff;
+  --ios-rojo: #ff3b30;
+  --ios-verde: #34c759;
+  --ios-gris: #8e8e93;
+  --ios-fondo: #f2f2f7;
+  --ios-separador: rgba(60, 60, 67, 0.18);
+  --fuente-ios: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  font-family: var(--fuente-ios);
+  /* Escritorio de madera */
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(255, 210, 150, 0.18), transparent 60%),
+    repeating-linear-gradient(92deg, rgba(0, 0, 0, 0.07) 0 2px, transparent 2px 9px),
+    repeating-linear-gradient(88deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 23px),
+    linear-gradient(180deg, #5b3a24, #3e2716);
+  overflow: hidden;
+}
+
+.oculto {
+  display: none !important;
+}
+
+.escritorio {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 56px;
+  padding: 24px;
+}
+
+/* ---------- Corcho y post-its ---------- */
+
+.corcho {
+  width: 300px;
+  padding: 26px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  border: 10px solid #6e4a2e;
+  border-radius: 6px;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(0, 0, 0, 0.12) 0 1px, transparent 2px) 0 0 / 7px 7px,
+    radial-gradient(circle at 70% 60%, rgba(255, 255, 255, 0.1) 0 1px, transparent 2px) 0 0 / 11px 11px,
+    #c49a63;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45), inset 0 0 30px rgba(0, 0, 0, 0.25);
+  transform: rotate(-1.5deg);
+}
+
+.postit {
+  position: relative;
+  padding: 18px 16px 14px;
+  font-family: 'Caveat', 'Comic Sans MS', cursive;
+  font-size: 1.35rem;
+  color: #2b2b2b;
+  box-shadow: 2px 6px 10px rgba(0, 0, 0, 0.3);
+}
+
+.postit::before {
+  /* Chinche */
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin-left: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ff8a80, #c62828 60%, #7f1010);
+  box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.4);
+}
+
+.postit:nth-child(1) { transform: rotate(-3deg); }
+.postit:nth-child(2) { transform: rotate(2.5deg); margin-left: 24px; }
+.postit:nth-child(3) { transform: rotate(-1deg); }
+
+.postit.amarillo { background: #fff176; }
+.postit.rosa { background: #ffab91; }
+.postit.celeste { background: #b3e5fc; }
+
+.postit h3 {
+  margin: 0 0 4px;
+  font-family: 'Permanent Marker', 'Comic Sans MS', cursive;
+  font-weight: 400;
+  font-size: 1.05rem;
+  text-transform: uppercase;
+}
+
+.postit p {
+  margin: 0;
+  line-height: 1.1;
+}
+
+.postit .grande {
+  font-family: 'Permanent Marker', cursive;
+  font-size: 1.9rem;
+  color: #b71c1c;
+}
+
+.postit .chico {
+  font-size: 1.05rem;
+  opacity: 0.7;
+}
+
+.palitos {
+  font-family: 'Permanent Marker', cursive;
+  font-size: 2rem;
+  letter-spacing: 6px;
+  color: #b71c1c;
+}
+
+.lectura {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 4px 10px;
+  font-size: 1.15rem;
+}
+
+.trazo {
+  height: 12px;
+  border: 2px solid #333;
+  border-radius: 3px 8px 4px 6px;
+}
+
+.tinta {
+  height: 100%;
+  width: 0;
+  transition: width 0.6s ease;
+}
+
+.tinta.roja { background: repeating-linear-gradient(-45deg, #d32f2f 0 3px, #ef5350 3px 6px); }
+.tinta.verde { background: repeating-linear-gradient(-45deg, #2e7d32 0 3px, #66bb6a 3px 6px); }
+
+/* ---------- iPhone ---------- */
+
+.iphone {
+  position: relative;
+  flex-shrink: 0;
+  width: 390px;
+  height: min(844px, calc(100vh - 48px));
+  padding: 13px;
+  border-radius: 64px;
+  background: linear-gradient(145deg, #8c8a86, #3c3b39 30%, #6d6b67 55%, #2d2c2a 80%, #77746f);
+  box-shadow:
+    0 0 0 1px #1a1a1a,
+    inset 0 0 0 2px rgba(255, 255, 255, 0.25),
+    0 40px 60px rgba(0, 0, 0, 0.55),
+    0 10px 20px rgba(0, 0, 0, 0.35);
+}
+
+.boton-lateral {
+  position: absolute;
+  width: 4px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #4a4946, #8a8884);
+}
+
+.boton-lateral.izq1 { left: -4px; top: 170px; height: 60px; }
+.boton-lateral.izq2 { left: -4px; top: 245px; height: 60px; }
+.boton-lateral.der { right: -4px; top: 210px; height: 96px; }
+
+.pantalla-telefono {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 52px;
+  background: #000;
+  box-shadow: 0 0 0 4px #000;
+}
+
+.isla {
+  position: absolute;
+  z-index: 20;
+  top: 11px;
+  left: 50%;
+  width: 122px;
+  height: 36px;
+  margin-left: -61px;
+  border-radius: 20px;
+  background: #000;
+}
+
+.barra-ios {
+  position: absolute;
+  z-index: 15;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 54px;
+  padding: 18px 34px 0 46px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  pointer-events: none;
+}
+
+body[data-vista='v-ajustes'] .barra-ios,
+body[data-vista='v-contactos'] .barra-ios {
+  color: #000;
+}
+
+.iconos-estado {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.iconos-estado svg {
+  fill: currentColor;
+}
+
+.bateria {
+  width: 26px;
+  height: 12px;
+  padding: 1.5px;
+  border: 1.5px solid currentColor;
+  border-radius: 4px;
+  opacity: 0.9;
+}
+
+.bateria span {
+  display: block;
+  width: 70%;
+  height: 100%;
+  border-radius: 1.5px;
+  background: currentColor;
+}
+
+.indicador-home {
+  position: absolute;
+  z-index: 30;
+  bottom: 8px;
+  left: 50%;
+  width: 134px;
+  height: 5px;
+  margin-left: -67px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.85);
+  mix-blend-mode: difference;
+  pointer-events: none;
+}
+
+.vista {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+}
+
+.vista.activa {
+  display: flex;
+  animation: aparecer 0.25s ease;
+}
+
+@keyframes aparecer {
+  from { opacity: 0; transform: scale(0.98); }
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+/* ---------- Pantalla bloqueada ---------- */
+
+.bloqueo {
+  align-items: center;
+  padding: 76px 14px 40px;
+  color: #fff;
+  background:
+    radial-gradient(ellipse at 50% 115%, #f6b26b 0%, transparent 55%),
+    radial-gradient(ellipse at 15% 85%, #e0663b 0%, transparent 45%),
+    linear-gradient(180deg, #0d3b4a 0%, #19596a 45%, #c8693f 85%, #f2a65a 100%);
+}
+
+.bloqueo-fecha {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.bloqueo-hora {
+  margin: -6px 0 0;
+  font-size: 92px;
+  font-weight: 700;
+  letter-spacing: -2px;
+  line-height: 1.05;
+  font-family: 'SF Pro Rounded', var(--fuente-ios);
+}
+
+.notificacion {
+  margin-top: auto;
+  width: 100%;
+  display: flex;
+  gap: 10px;
+  padding: 13px 14px;
+  border: none;
+  border-radius: 22px;
+  text-align: left;
+  color: #000;
+  background: rgba(245, 245, 245, 0.72);
+  backdrop-filter: blur(24px) saturate(1.6);
+  -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  animation: notificar 0.6s cubic-bezier(0.2, 1.4, 0.4, 1) 0.4s both;
+}
+
+@keyframes notificar {
+  from { opacity: 0; transform: translateY(30px) scale(0.92); }
+}
+
+.app-icono {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  font-size: 22px;
+  background: linear-gradient(180deg, #65f37b, #29c840);
+}
+
+.notif-cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.notif-cabecera {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.notif-cabecera span {
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.bloqueo-pie {
+  margin: 18px 0 0;
+  font-size: 13px;
+  opacity: 0.75;
+}
+
+/* ---------- Estilo iOS claro (Ajustes, Contactos) ---------- */
+
+.ios-claro {
+  background: var(--ios-fondo);
+  color: #000;
+}
+
+.nav-ios {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  height: 98px;
+  padding: 54px 16px 0;
+  border-bottom: 0.5px solid var(--ios-separador);
+  background: rgba(249, 249, 249, 0.94);
+}
+
+.nav-titulo {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.nav-boton {
+  justify-self: end;
+  border: none;
+  padding: 0;
+  background: none;
+  font-size: 17px;
+  color: var(--ios-azul);
+}
+
+.contenido-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 16px 40px;
+}
+
+.titulo-grande {
+  margin: 8px 0 2px;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.subtitulo-ios {
+  margin: 0 0 6px;
+  font-size: 15px;
+  color: #3c3c43cc;
+  line-height: 1.35;
+}
+
+.grupo-titulo {
+  margin: 26px 16px 7px;
+  font-size: 13px;
+  color: #6d6d72;
+}
+
+.grupo {
+  overflow: hidden;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.grupo + .grupo {
+  margin-top: 26px;
+}
+
+.grupo-pie {
+  margin: 7px 16px 0;
+  font-size: 13px;
+  line-height: 1.35;
+  color: #6d6d72;
+}
+
+.grupo-pie a {
+  color: var(--ios-azul);
+}
+
+.fila {
+  position: relative;
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  border: none;
+  background: #fff;
+  font-size: 17px;
+  color: #000;
+  text-align: left;
+}
+
+.fila + .fila::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 0;
+  border-top: 0.5px solid var(--ios-separador);
+}
+
+.fila > span:first-child {
+  flex-shrink: 0;
+}
+
+.fila input,
+.fila select {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  text-align: right;
+  color: #3c3c4399;
+  outline: none;
+}
+
+.fila-boton {
+  justify-content: center;
+}
+
+.fila-boton.rojo {
+  color: var(--ios-rojo);
+}
+
+.fila-boton:active,
+.contacto:active:not(:disabled) {
+  background: #e5e5ea;
+}
+
+.error-ios {
+  margin: 14px 16px 0;
+  font-size: 13px;
+  color: var(--ios-rojo);
+}
+
+/* Contactos */
+
+.contacto {
+  min-height: 72px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.contacto + .contacto::before {
+  left: 74px;
+}
+
+.contacto:disabled {
+  cursor: default;
+}
+
+.contacto:disabled .avatar,
+.contacto:disabled .contacto-info {
+  opacity: 0.4;
+}
+
+.contacto-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.contacto-info strong {
+  font-weight: 600;
+}
+
+.contacto-info span {
+  font-size: 14px;
+  line-height: 1.3;
+  color: var(--ios-gris);
+}
+
+.contacto-accion {
+  flex-shrink: 0;
+  font-size: 14px;
+  color: var(--ios-gris);
+}
+
+.contacto-accion svg {
+  width: 22px;
+  height: 22px;
+  fill: var(--ios-azul);
+}
+
+.avatar {
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 19px;
+  font-weight: 500;
+  color: #fff;
+  background: linear-gradient(180deg, #a6abb6, #858a94);
+  font-family: 'SF Pro Rounded', var(--fuente-ios);
+}
+
+/* ---------- Llamada ---------- */
+
+.llamada {
+  --color-vecino: #555;
+  align-items: center;
+  padding: 80px 28px 46px;
+  color: #fff;
+  background:
+    radial-gradient(ellipse at 50% 25%, color-mix(in srgb, var(--color-vecino) 75%, #fff 10%), transparent 70%),
+    linear-gradient(180deg, color-mix(in srgb, var(--color-vecino) 60%, #000) 0%, #0b0b0c 100%);
+}
+
+.llamada-arriba {
+  text-align: center;
+}
+
+.llamada-estado {
+  margin: 0;
+  font-size: 17px;
+  color: rgba(255, 255, 255, 0.65);
+  font-variant-numeric: tabular-nums;
+}
+
+.llamada-nombre {
+  margin: 2px 0 0;
+  font-size: 32px;
+  font-weight: 400;
+  letter-spacing: -0.3px;
+}
+
+.avatar-enorme {
+  width: 116px;
+  height: 116px;
+  margin-top: 26px;
+  font-size: 46px;
+  font-weight: 400;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.subtitulos {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 0;
+}
+
+.subtitulo-texto {
+  margin: 0;
+  max-height: 170px;
+  overflow-y: auto;
+  font-size: 19px;
+  line-height: 1.35;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.subtitulo-texto.vos {
+  color: #9fd2ff;
+  font-style: italic;
+}
+
+.subtitulo-texto.pensando {
+  color: rgba(255, 255, 255, 0.5);
+  animation: latido 1.2s infinite;
+}
+
+@keyframes latido {
+  50% { opacity: 0.35; }
+}
+
+.frases {
+  margin: 0 0 18px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.botonera {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 290px;
+}
+
+.boton-redondo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  border: none;
+  background: none;
+  color: #fff;
+  font-size: 13px;
+}
+
+.boton-redondo .circulo {
+  width: 74px;
+  height: 74px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: background 0.15s, transform 0.15s;
+}
+
+.boton-redondo svg {
+  width: 32px;
+  height: 32px;
+  fill: currentColor;
+}
+
+.boton-redondo.activo .circulo {
+  background: #fff;
+  color: #111;
+}
+
+.boton-redondo.grabando .circulo {
+  background: var(--ios-rojo);
+  animation: grabando 1.2s infinite;
+}
+
+@keyframes grabando {
+  0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.6); }
+  100% { box-shadow: 0 0 0 22px rgba(255, 59, 48, 0); }
+}
+
+.boton-redondo:active .circulo {
+  transform: scale(0.94);
+}
+
+.boton-redondo:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.boton-cortar {
+  width: 74px;
+  height: 74px;
+  margin-top: 28px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 50%;
+  background: var(--ios-rojo);
+}
+
+.boton-cortar svg {
+  width: 36px;
+  height: 36px;
+  fill: #fff;
+}
+
+.boton-cortar:active {
+  filter: brightness(0.85);
+}
+
+/* ---------- Hoja de mensajes ---------- */
+
+.hoja {
+  position: absolute;
+  z-index: 12;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 86%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px 14px 0 0;
+  background: #fff;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.35);
+  transform: translateY(105%);
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.hoja.abierta {
+  transform: translateY(0);
+}
+
+.hoja-cabecera {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px 10px;
+  border-bottom: 0.5px solid var(--ios-separador);
+  background: #f9f9f9;
+  border-radius: 14px 14px 0 0;
+}
+
+.avatar-mini {
+  width: 32px;
+  height: 32px;
+  font-size: 13px;
+}
+
+.hoja-nombre {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.chat {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+}
+
+.burbuja {
+  max-width: 76%;
+  padding: 8px 13px;
+  border-radius: 19px;
+  font-size: 16px;
+  line-height: 1.3;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.burbuja.vos {
+  align-self: flex-end;
+  color: #fff;
+  background: var(--ios-azul);
+  border-bottom-right-radius: 6px;
+}
+
+.burbuja.ellos {
+  align-self: flex-start;
+  color: #000;
+  background: #e9e9eb;
+  border-bottom-left-radius: 6px;
+}
+
+.burbuja.escribiendo {
+  letter-spacing: 2px;
+  color: var(--ios-gris);
+  animation: latido 1s infinite;
+}
+
+.burbuja.error {
+  align-self: center;
+  max-width: 90%;
+  background: none;
+  font-size: 12px;
+  text-align: center;
+  color: var(--ios-rojo);
+}
+
+.barra-escribir {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px 30px;
+  border-top: 0.5px solid var(--ios-separador);
+}
+
+.barra-escribir input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 14px;
+  border: 1px solid #c7c7cc;
+  border-radius: 18px;
+  font: inherit;
+  font-size: 16px;
+  outline: none;
+}
+
+.boton-enviar {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--ios-azul);
+}
+
+.boton-enviar svg {
+  width: 18px;
+  height: 18px;
+}
+
+.boton-enviar:disabled {
+  background: #c7c7cc;
+}
+
+/* ---------- Alerta iOS ---------- */
+
+.velo {
+  position: absolute;
+  z-index: 25;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.35);
+  animation: aparecer 0.2s ease;
+}
+
+.alerta {
+  width: 270px;
+  overflow: hidden;
+  border-radius: 14px;
+  text-align: center;
+  background: rgba(242, 242, 242, 0.88);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  animation: alertar 0.3s cubic-bezier(0.2, 1.3, 0.4, 1);
+}
+
+@keyframes alertar {
+  from { transform: scale(1.15); opacity: 0; }
+}
+
+.alerta-cuerpo {
+  padding: 19px 16px 17px;
+}
+
+.alerta h3 {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.alerta p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.alerta-pensamiento {
+  margin-top: 10px !important;
+  font-style: italic;
+  color: #3c3c43;
+}
+
+.alerta-boton {
+  width: 100%;
+  height: 44px;
+  border: none;
+  border-top: 0.5px solid rgba(60, 60, 67, 0.3);
+  background: none;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ios-azul);
+}
+
+.alerta-boton:active {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* ---------- Celular: el juego ocupa toda la pantalla ---------- */
+
+.girar {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  html,
+  body {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  body {
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  input,
+  .burbuja,
+  .subtitulo-texto {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* El alto lo fija script.js con el alto visible real (descuenta el teclado). */
+  .escritorio {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0;
+    height: var(--alto-visible, 100dvh);
+    padding: env(safe-area-inset-top) 0 0;
+    transform: translateY(var(--desplazamiento, 0px));
+  }
+
+  .iphone {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    height: auto;
+    padding: 0;
+    border-radius: 0;
+    background: #000;
+    box-shadow: none;
+  }
+
+  /* El celular de verdad ya tiene su barra de estado, isla y botones. */
+  .boton-lateral,
+  .isla,
+  .barra-ios,
+  .indicador-home {
+    display: none;
+  }
+
+  .pantalla-telefono {
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  /* Post-its: una tira compacta arriba, solo en contactos y llamada */
+  .corcho {
+    display: none;
+    width: auto;
+    flex-direction: row;
+    gap: 6px;
+    padding: 6px 8px 8px;
+    border: none;
+    border-radius: 0;
+    transform: none;
+    background: transparent;
+    box-shadow: inset 0 -6px 8px -6px rgba(0, 0, 0, 0.5);
+  }
+
+  body[data-vista='v-llamada'] .corcho,
+  body[data-vista='v-contactos'] .corcho {
+    display: flex;
+  }
+
+  body.chat-abierto .corcho {
+    display: none;
+  }
+
+  .postit {
+    flex: 1;
+    min-width: 0;
+    margin: 0 !important;
+    padding: 5px 7px 4px;
+    font-size: 0.95rem;
+    box-shadow: 1px 3px 5px rgba(0, 0, 0, 0.35);
+  }
+
+  .postit:nth-child(1) { transform: rotate(-1.5deg); }
+  .postit:nth-child(2) { transform: rotate(1deg); }
+  .postit:nth-child(3) { transform: rotate(-0.5deg); }
+
+  .postit::before {
+    display: none;
+  }
+
+  .postit h3 {
+    font-size: 0.66rem;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .postit .grande,
+  .palitos {
+    font-size: 1.15rem;
+    letter-spacing: 2px;
+  }
+
+  .postit .chico,
+  #nota-dia {
+    display: none;
+  }
+
+  .lectura {
+    font-size: 0.82rem;
+    gap: 0 4px;
+  }
+
+  .trazo {
+    height: 8px;
+  }
+
+  /* Espacios: sin barra de estado falsa, pero respetando la zona segura */
+  .nav-ios {
+    height: auto;
+    min-height: 50px;
+    padding: 6px 16px;
+  }
+
+  .contenido-scroll {
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  .bloqueo {
+    padding: 40px 12px calc(20px + env(safe-area-inset-bottom));
+  }
+
+  .bloqueo-hora {
+    font-size: 84px;
+  }
+
+  .llamada {
+    padding: 22px 24px calc(18px + env(safe-area-inset-bottom));
+  }
+
+  .avatar-enorme {
+    margin-top: 16px;
+  }
+
+  .hoja {
+    height: 100%;
+    border-radius: 0;
+  }
+
+  .hoja-cabecera {
+    border-radius: 0;
+  }
+
+  .barra-escribir {
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  }
+
+  /* Con el teclado abierto, la zona segura de abajo ya no hace falta */
+  body.teclado-abierto .barra-escribir {
+    padding-bottom: 8px;
+  }
+
+  .boton-redondo .circulo,
+  .boton-cortar {
+    width: 72px;
+    height: 72px;
+  }
+
+  /* Botones que reaccionan al toque, como en iOS */
+  .boton-redondo:active .circulo {
+    background: rgba(255, 255, 255, 0.35);
+  }
+}
+
+/* Celulares angostos o bajitos (iPhone SE, Android chicos) */
+@media (max-width: 380px) {
+  .postit h3 {
+    font-size: 0.58rem;
+  }
+}
+
+@media (max-width: 760px) and (max-height: 700px) {
+  .llamada-nombre {
+    font-size: 26px;
+  }
+
+  .avatar-enorme {
+    width: 72px;
+    height: 72px;
+    margin-top: 10px;
+    font-size: 28px;
+  }
+
+  .subtitulo-texto {
+    font-size: 17px;
+  }
+
+  .frases {
+    margin-bottom: 10px;
+  }
+
+  .boton-redondo .circulo,
+  .boton-cortar {
+    width: 62px;
+    height: 62px;
+  }
+
+  .boton-redondo svg {
+    width: 27px;
+    height: 27px;
+  }
+
+  .boton-cortar {
+    margin-top: 14px;
+  }
+
+  .bloqueo-hora {
+    font-size: 70px;
+  }
+}
+
+/* Celular acostado: pedimos que lo giren */
+@media (orientation: landscape) and (max-height: 500px) {
+  .girar {
+    position: fixed;
+    z-index: 100;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: #fff;
+    font-size: 17px;
+    background: #111;
+  }
+
+  .girar span {
+    font-size: 48px;
+    animation: girar 2s ease-in-out infinite;
+  }
+
+  @keyframes girar {
+    50% { transform: rotate(-90deg); }
+  }
+}
+
+@media (max-height: 760px) and (min-width: 761px) {
+  .avatar-enorme {
+    width: 84px;
+    height: 84px;
+    font-size: 34px;
+    margin-top: 14px;
+  }
+
+  .boton-redondo .circulo,
+  .boton-cortar {
+    width: 62px;
+    height: 62px;
+  }
+
+  .boton-cortar {
+    margin-top: 16px;
+  }
+}

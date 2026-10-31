@@ -1,0 +1,16 @@
+{
+  "name": "El Cuento del Tío",
+  "short_name": "Cuento del Tío",
+  "description": "Llamá a los vecinos de Villa Chanta y convencelos con tu mejor cuento.",
+  "lang": "es-AR",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#3e2716",
+  "theme_color": "#3e2716",
+  "icons": [
+    { "src": "img/icono-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "img/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
