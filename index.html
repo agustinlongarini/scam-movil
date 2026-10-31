@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=10">
+  <link rel="stylesheet" href="styles.css?v=11">
 </head>
 <body>
   <div class="escritorio">
@@ -109,12 +109,24 @@
             </div>
             <p class="grupo-pie">En vivo hablás y el vecino te contesta con su voz, sin límite diario. Si no conecta, la llamada sigue sola en modo clásico (texto, unas 500 frases por día y voz del navegador). Los modelos se eligen solos según tu cuenta.</p>
             <p id="ajustes-error" class="error-ios"></p>
+            <p class="grupo-titulo">VECINOS</p>
+            <div class="grupo">
+              <label class="fila">
+                <span>Vecinos</span>
+                <select id="input-vecinos">
+                  <option value="ia">Nuevos cada día</option>
+                  <option value="fijos">Siempre los mismos</option>
+                </select>
+              </label>
+            </div>
+            <p class="grupo-pie">Con "Nuevos cada día", Gemini inventa 3 vecinos distintos al empezar cada día. Usa un solo pedido por día.</p>
+
             <p class="grupo-titulo">DIAGNÓSTICO</p>
             <div class="grupo">
               <button id="copiar-diagnostico" class="fila fila-boton azul">Copiar diagnóstico</button>
             </div>
             <pre id="diagnostico" class="diagnostico"></pre>
-            <p class="grupo-pie version">Versión 10</p>
+            <p class="grupo-pie version">Versión 11</p>
           </div>
         </section>
 
@@ -130,6 +142,7 @@
             <p id="contactos-meta" class="subtitulo-ios"></p>
             <p class="grupo-titulo">PARA LLAMAR HOY</p>
             <div id="lista-contactos" class="grupo"></div>
+            <p id="aviso-vecinos" class="grupo-pie"></p>
             <div class="grupo">
               <button id="terminar-dia" class="fila fila-boton rojo">Terminar el día</button>
             </div>
@@ -216,8 +229,8 @@
     Girá el celular para jugar
   </div>
 
-  <script src="personajes.js?v=10"></script>
-  <script src="en-vivo.js?v=10"></script>
-  <script src="script.js?v=10"></script>
+  <script src="personajes.js?v=11"></script>
+  <script src="en-vivo.js?v=11"></script>
+  <script src="script.js?v=11"></script>
 </body>
 </html>

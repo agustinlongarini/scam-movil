@@ -23,7 +23,7 @@ El juego está pensado para jugarse en el celular, parado (en vertical).
 
 ## Reglas
 
-- Cada día te tocan 3 vecinos, cada vez más difíciles.
+- Cada día te tocan 3 vecinos, cada vez más difíciles. Gemini los inventa nuevos cada día (con un solo pedido) y no repite nombres. Si preferís, en Ajustes podés jugar siempre con los mismos 9 vecinos, que también se usan si Gemini falla.
 - En la lista de contactos ves qué se dice de cada vecino: ahí está la pista de su punto débil.
 - Si le tocás el punto débil, se va convenciendo. Los del primer día caen en pocas frases; los del tercero cuestan bastante más.
 - Tenés 3 minutos por llamada para convencerlos. Cuando se termina el tiempo, el vecino se despide y corta.
@@ -44,7 +44,7 @@ Los modelos se eligen solos: el juego le pregunta a tu cuenta de Google cuáles 
 
 - `index.html`: el escritorio, el corcho y el iPhone con sus pantallas.
 - `styles.css`: estilos.
-- `personajes.js`: los vecinos, sus voces y las metas de cada día. Acá podés agregar personajes nuevos.
+- `personajes.js`: los 9 vecinos de siempre (también son el respaldo si Gemini no puede inventar nuevos) y las metas de cada día.
 - `script.js`: lógica del juego, modo clásico y elección de modelos.
 - `en-vivo.js`: llamada en tiempo real con Gemini Live.
 - `captura-audio.js`: pasa el micrófono al formato que pide Gemini Live.

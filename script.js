@@ -1,4 +1,4 @@
-const VERSION = 10;
+const VERSION = 11;
 const SEGUNDOS_POR_LLAMADA = 180;
 const DEUDA_TOTAL = DIAS[DIAS.length - 1].meta;
 
@@ -7,7 +7,8 @@ const estado = {
     apiKey: localStorage.getItem('gemini-key') || '',
     modo: localStorage.getItem('modo') || 'vivo',
     modeloVivo: localStorage.getItem('modelo-vivo') || '',
-    modeloTexto: localStorage.getItem('modelo-texto') || ''
+    modeloTexto: localStorage.getItem('modelo-texto') || '',
+    vecinos: localStorage.getItem('vecinos') || 'ia'
   },
   enJuego: false,
   dia: 0,
@@ -24,11 +25,14 @@ function formatoPlata(n) {
   return '$' + n.toLocaleString('es-AR');
 }
 
+// Palabras que no cuentan para las iniciales del contacto.
+const TITULOS = ['Don', 'Doña', 'Comisario', 'Comisaria', 'Ingeniero', 'Ingeniera', 'Doctor', 'Doctora', 'Profesor', 'Profesora', 'Profe', 'Señor', 'Señora', 'Padre', 'Madre', 'Tía', 'Tío', 'Abuela', 'Abuelo'];
+
 function iniciales(nombre) {
   const palabras = nombre
     .replace(/"[^"]*"/g, '')
     .split(/\s+/)
-    .filter((p) => /^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+$/.test(p) && !['Don', 'Doña', 'Comisario'].includes(p));
+    .filter((p) => /^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+$/.test(p) && !TITULOS.includes(p));
   if (palabras.length === 0) return '?';
   const primera = palabras[0][0];
   return palabras.length > 1 ? primera + palabras[palabras.length - 1][0] : primera;
@@ -178,6 +182,7 @@ function cargarAjustes() {
   $('diagnostico').textContent = localStorage.getItem('diagnostico') || 'Todavía no hiciste ninguna llamada en vivo.';
   $('input-key').value = c.apiKey;
   $('input-modo').value = c.modo;
+  $('input-vecinos').value = c.vecinos;
   $('modelo-vivo').textContent = nombreCorto(c.modeloVivo);
   $('modelo-texto').textContent = nombreCorto(c.modeloTexto);
 }
@@ -210,6 +215,8 @@ $('ajustes-listo').addEventListener('click', async () => {
   const key = $('input-key').value.trim();
   c.modo = $('input-modo').value;
   localStorage.setItem('modo', c.modo);
+  c.vecinos = $('input-vecinos').value;
+  localStorage.setItem('vecinos', c.vecinos);
   if (!key) {
     $('ajustes-error').textContent = 'Necesitás una API key para jugar.';
     return;
@@ -306,11 +313,34 @@ function empezarJuego() {
   empezarDia();
 }
 
-function empezarDia() {
+async function empezarDia() {
   const dificultad = estado.dia + 1;
-  estado.vecinosDelDia = mezclar(PERSONAJES.filter((p) => p.dificultad === dificultad));
+  const dia = estado.dia;
   estado.llamados = new Set();
   estado.llamada = null;
+  estado.avisoVecinos = '';
+  const deSiempre = () => mezclar(PERSONAJES.filter((p) => p.dificultad === dificultad));
+
+  if (estado.config.vecinos !== 'ia') {
+    estado.vecinosDelDia = deSiempre();
+    mostrarContactos();
+    return;
+  }
+
+  estado.vecinosDelDia = [];
+  estado.buscandoVecinos = true;
+  mostrarContactos();
+  let vecinos;
+  try {
+    vecinos = await generarVecinos(dificultad);
+  } catch (err) {
+    console.warn('No se pudieron inventar vecinos:', err);
+    vecinos = deSiempre();
+    estado.avisoVecinos = `No pude inventar vecinos nuevos (${err.message}). Hoy llamás a los de siempre.`;
+  }
+  if (estado.dia !== dia || !estado.enJuego) return;
+  estado.buscandoVecinos = false;
+  estado.vecinosDelDia = vecinos;
   mostrarContactos();
 }
 
@@ -324,6 +354,11 @@ function mostrarContactos() {
 
   const lista = $('lista-contactos');
   lista.innerHTML = '';
+  $('aviso-vecinos').textContent = estado.avisoVecinos || '';
+  $('terminar-dia').disabled = Boolean(estado.buscandoVecinos);
+  if (estado.buscandoVecinos) {
+    lista.innerHTML = '<div class="fila buscando">Buscando vecinos en la guía…</div>';
+  }
   estado.vecinosDelDia.forEach((p) => {
     const llamado = estado.llamados.has(p.id);
     const fila = document.createElement('button');
@@ -1126,17 +1161,8 @@ function errorEnCastellano(err) {
   return err;
 }
 
-async function preguntarAGemini(p, historial) {
-  const cuerpo = {
-    systemInstruction: { parts: [{ text: instrucciones(p) }] },
-    contents: historial,
-    generationConfig: {
-      temperature: 0.9,
-      responseMimeType: 'application/json',
-      responseSchema: ESQUEMA
-    }
-  };
-
+// Pide una respuesta en JSON al modelo de texto, probando con otros si falla.
+async function pedirJSON(cuerpo) {
   const modelos = [...new Set([modeloQueAnda, estado.config.modeloTexto, ...MODELOS_DE_RESPALDO].filter(Boolean))];
   let datos = null;
   let ultimoError = null;
@@ -1168,8 +1194,19 @@ async function preguntarAGemini(p, historial) {
     .map((parte) => parte.text || '')
     .join('');
   if (!texto) throw new Error('la respuesta llegó vacía');
+  return JSON.parse(texto);
+}
 
-  const r = JSON.parse(texto);
+async function preguntarAGemini(p, historial) {
+  const r = await pedirJSON({
+    systemInstruction: { parts: [{ text: instrucciones(p) }] },
+    contents: historial,
+    generationConfig: {
+      temperature: 0.9,
+      responseMimeType: 'application/json',
+      responseSchema: ESQUEMA
+    }
+  });
   const limitar = (n, min, max) => Math.min(max, Math.max(min, Math.round(Number(n) || 0)));
   return {
     respuesta: String(r.respuesta || '...'),
@@ -1179,6 +1216,109 @@ async function preguntarAGemini(p, historial) {
     cuelga: Boolean(r.cuelga),
     pensamiento: String(r.pensamiento || '')
   };
+}
+
+// ---------- Vecinos nuevos cada día ----------
+
+const VOCES = {
+  masculino: ['Puck', 'Fenrir', 'Charon', 'Orus', 'Algenib', 'Schedar', 'Iapetus', 'Umbriel', 'Rasalgethi', 'Achird'],
+  femenino: ['Kore', 'Aoede', 'Gacrux', 'Leda', 'Zephyr', 'Sulafat', 'Achernar', 'Despina', 'Autonoe', 'Vindemiatrix']
+};
+const COLORES = ['#c9772b', '#3f7d4f', '#9b6a8f', '#8a5a3c', '#b0546a', '#3e6a8a', '#5b6470', '#7a3b3b', '#2f4a5c', '#6b7a2f', '#a0522d', '#4b5d8a'];
+const AHORROS = { 1: [3000, 8000], 2: [8000, 16000], 3: [15000, 30000] };
+const COMO_SON = {
+  1: 'Crédulos y fáciles de entusiasmar. El rumor deja bastante clara su debilidad.',
+  2: 'Desconfiados, pero con su lado blando. El rumor da una pista indirecta de su debilidad.',
+  3: 'Muy difíciles de engañar: gente avivada (profesionales, ex policías, chantas retirados, gente que ya fue estafada). El rumor es vago.'
+};
+
+const ESQUEMA_VECINOS = {
+  type: 'ARRAY',
+  items: {
+    type: 'OBJECT',
+    properties: {
+      nombre: { type: 'STRING' },
+      edad: { type: 'INTEGER' },
+      genero: { type: 'STRING', enum: ['masculino', 'femenino'] },
+      pista: { type: 'STRING' },
+      rumor: { type: 'STRING' },
+      personalidad: { type: 'STRING' },
+      debilidad: { type: 'STRING' },
+      saludo: { type: 'STRING' },
+      estiloVoz: { type: 'STRING' },
+      ahorros: { type: 'INTEGER' }
+    },
+    required: ['nombre', 'edad', 'genero', 'pista', 'rumor', 'personalidad', 'debilidad', 'saludo', 'estiloVoz', 'ahorros']
+  }
+};
+
+function nombresUsados() {
+  try {
+    return JSON.parse(localStorage.getItem('vecinos-usados') || '[]');
+  } catch {
+    return [];
+  }
+}
+
+async function generarVecinos(dificultad) {
+  const [minimo, maximo] = AHORROS[dificultad];
+  const usados = [...nombresUsados(), ...PERSONAJES.map((p) => p.nombre)];
+  const lista = await pedirJSON({
+    contents: [{ role: 'user', parts: [{ text: `Inventá 3 vecinos para el día ${dificultad} de "El Cuento del Tío", un juego de humor ambientado en el barrio ficticio de Villa Chanta, Argentina.
+El jugador es un chanta que los llama por teléfono para sacarles plata con algún cuento. Cada vecino tiene un punto débil por donde se lo puede convencer.
+
+Cómo son los vecinos de este día: ${COMO_SON[dificultad]}
+Que sean bien distintos entre sí: mezclá edades (de 18 a 90), géneros, oficios, manías y formas de hablar. Humor de barrio argentino. Personajes inventados, nada de gente real ni famosos.
+No uses ninguno de estos nombres: ${usados.join(', ')}.
+
+Campos:
+- nombre: nombre y apellido (puede llevar apodo entre comillas, o "Don"/"Doña").
+- pista: una oración que dice quién es (la ve el jugador).
+- rumor: empieza con "Dicen que" y da una pista de su debilidad (la ve el jugador).
+- personalidad: cómo habla y cómo se comporta.
+- debilidad: su punto débil concreto.
+- saludo: cómo atiende el teléfono, en personaje, en una o dos oraciones cortas.
+- estiloVoz: empieza con "Con acento argentino rioplatense," y describe el tono de voz.
+- ahorros: entre ${minimo} y ${maximo} pesos.` }] }],
+    generationConfig: {
+      temperature: 1.1,
+      responseMimeType: 'application/json',
+      responseSchema: ESQUEMA_VECINOS
+    }
+  });
+
+  if (!Array.isArray(lista) || lista.length < 3) throw new Error('Gemini no inventó suficientes vecinos');
+  const limitar = (n, min, max) => Math.min(max, Math.max(min, Math.round(Number(n) || 0)));
+  const texto = (t, respaldo) => (typeof t === 'string' && t.trim() ? t.trim() : respaldo);
+  const vocesLibres = { masculino: mezclar(VOCES.masculino), femenino: mezclar(VOCES.femenino) };
+  const colores = mezclar(COLORES);
+
+  const vecinos = lista.slice(0, 3).map((v, i) => {
+    const genero = v.genero === 'femenino' ? 'femenino' : 'masculino';
+    const edad = limitar(v.edad, 18, 95);
+    return {
+      id: `ia-${Date.now()}-${i}`,
+      nombre: texto(v.nombre, `Vecino ${i + 1}`),
+      edad,
+      dificultad,
+      ahorros: limitar(v.ahorros, minimo, maximo),
+      pista: texto(v.pista, 'Un vecino del barrio.'),
+      rumor: texto(v.rumor, 'Dicen que es bastante particular.'),
+      personalidad: texto(v.personalidad, 'Charlatán y curioso.'),
+      debilidad: texto(v.debilidad, 'Le encanta que le presten atención.'),
+      saludo: texto(v.saludo, '¿Hola? ¿Quién habla?'),
+      estiloVoz: texto(v.estiloVoz, 'Con acento argentino rioplatense, en tono normal'),
+      voz: vocesLibres[genero].pop(),
+      color: colores[i],
+      // Para la voz del navegador (modo clásico).
+      tono: edad > 60 ? 0.8 : edad < 25 ? 1.15 : 1,
+      velocidad: edad > 70 ? 0.9 : 1.05
+    };
+  });
+
+  const nuevos = [...nombresUsados(), ...vecinos.map((v) => v.nombre)].slice(-60);
+  localStorage.setItem('vecinos-usados', JSON.stringify(nuevos));
+  return vecinos;
 }
 
 // ---------- Arranque ----------

@@ -578,6 +578,13 @@ button {
   color: #8a5a00;
 }
 
+.fila.buscando {
+  min-height: 72px;
+  justify-content: center;
+  color: var(--ios-gris);
+  animation: latido 1.2s infinite;
+}
+
 .contacto-accion {
   flex-shrink: 0;
   font-size: 14px;
