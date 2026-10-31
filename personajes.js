@@ -1,11 +1,10 @@
 // Vecinos de siempre de Villa Chanta (también son el respaldo si Gemini no puede inventar nuevos).
 // "dificultad" es el tipo de vecino: 1 crédulo, 2 desconfiado, 3 avivado.
-// "personalidad" y "debilidad" solo las ve la IA; "pista" y "rumor" son lo que ve el jugador.
+// "personalidad" y "debilidad" solo las ve la IA; "pista" es lo que ve el jugador.
 // "voz" y "estiloVoz" son para la voz de Gemini; "tono" y "velocidad", para la voz del navegador.
 const PERSONAJES = [
   {
     id: 'toto',
-    rumor: 'Dicen que quiere impresionar a su ex con alguna inversión de moda.',
     voz: 'Puck',
     estiloVoz: 'Con acento argentino rioplatense, como un pibe ingenuo, entusiasmado y charlatán',
     tono: 1.15,
@@ -22,7 +21,6 @@ const PERSONAJES = [
   },
   {
     id: 'kevin',
-    rumor: 'Dicen que daría cualquier cosa por skins exclusivas o por entrar a un equipo profesional.',
     voz: 'Fenrir',
     estiloVoz: 'Con acento argentino rioplatense, como un adolescente gamer apurado y canchero',
     tono: 1.2,
@@ -39,7 +37,6 @@ const PERSONAJES = [
   },
   {
     id: 'susana',
-    rumor: 'Dicen que no hace nada sin consultar los astros y que compra todo lo que sea "sanador".',
     voz: 'Aoede',
     estiloVoz: 'Con acento argentino rioplatense, en tono dulce, lento y espiritual',
     tono: 1.1,
@@ -56,7 +53,6 @@ const PERSONAJES = [
   },
   {
     id: 'aldo',
-    rumor: 'Dicen que haría lo que fuera por el Club Atlético Villa Chanta.',
     voz: 'Algenib',
     estiloVoz: 'Con acento argentino rioplatense, como un viejo gruñón y sin paciencia',
     tono: 0.75,
@@ -73,7 +69,6 @@ const PERSONAJES = [
   },
   {
     id: 'marta',
-    rumor: 'Dicen que su gato Michi está enfermo y que no se pierde la novela de la tarde.',
     voz: 'Gacrux',
     estiloVoz: 'Con acento argentino rioplatense, como una abuela pícara y burlona',
     tono: 1.05,
@@ -90,7 +85,6 @@ const PERSONAJES = [
   },
   {
     id: 'fede',
-    rumor: 'Dicen que se derrite si le hablás de lo inteligente que es.',
     voz: 'Charon',
     estiloVoz: 'Con acento argentino rioplatense, en tono soberbio y condescendiente',
     tono: 0.95,
@@ -107,7 +101,6 @@ const PERSONAJES = [
   },
   {
     id: 'ricardo',
-    rumor: 'Dicen que es tacaño: lo pierde un buen descuento de impuestos.',
     voz: 'Schedar',
     estiloVoz: 'Con acento argentino rioplatense, en tono frío, seco y apurado',
     tono: 0.85,
@@ -124,7 +117,6 @@ const PERSONAJES = [
   },
   {
     id: 'lucia',
-    rumor: 'Dicen que está agotada y sueña con unas vacaciones en el Caribe.',
     voz: 'Kore',
     estiloVoz: 'Con acento argentino rioplatense, en tono sarcástico, firme y rápido',
     tono: 1.0,
@@ -141,7 +133,6 @@ const PERSONAJES = [
   },
   {
     id: 'benitez',
-    rumor: 'Dicen que extraña la acción y se aburre en su retiro.',
     voz: 'Orus',
     estiloVoz: 'Con acento argentino rioplatense, como un comisario viejo, calmo y socarrón',
     tono: 0.7,
