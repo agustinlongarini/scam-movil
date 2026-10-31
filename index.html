@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>El Cuento del Tío</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main id="app">
+
+    <!-- Pantalla de inicio -->
+    <section id="pantalla-inicio" class="pantalla">
+      <h1>📞 El Cuento del Tío</h1>
+      <p class="subtitulo">Sos un chanta de poca monta y le debés plata al Tano.
+        Tenés tres días para juntarla llamando a los vecinos de Villa Chanta
+        y convenciéndolos de que te den sus ahorros.</p>
+
+      <div class="reglas">
+        <h2>Cómo se juega</h2>
+        <ul>
+          <li>Cada día te tocan 3 vecinos. Elegí a quién llamar.</li>
+          <li>Escribí lo que le decís. Del otro lado contesta una IA que actúa el personaje.</li>
+          <li>Si le encontrás el punto débil, confía más. Si exagerás, sospecha.</li>
+          <li>Si la sospecha llega al 100%, te cuelga y te denuncia. Con 3 denuncias, caés preso.</li>
+          <li>Tenés 10 mensajes por llamada. Llegá a la meta de cada día para seguir jugando.</li>
+        </ul>
+        <p class="aviso">Es un juego de humor: los personajes y las estafas son ficticios.</p>
+      </div>
+
+      <form id="form-config" class="config">
+        <label>
+          API key de Gemini
+          <input type="password" id="input-key" placeholder="Pegá tu API key acá" autocomplete="off" required>
+        </label>
+        <label>
+          Modelo
+          <input type="text" id="input-modelo" value="gemini-flash-latest" required>
+        </label>
+        <p class="nota">La key se guarda solo en este navegador y se envía únicamente a Google.
+          Conseguila gratis en <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>.</p>
+        <button type="submit" class="boton">Empezar</button>
+      </form>
+    </section>
+
+    <!-- Elegir a quién llamar -->
+    <section id="pantalla-dia" class="pantalla oculto">
+      <div class="barra-estado">
+        <span id="estado-dia"></span>
+        <span id="estado-plata"></span>
+        <span id="estado-calor"></span>
+      </div>
+      <p id="texto-meta" class="meta"></p>
+      <div id="lista-vecinos" class="vecinos"></div>
+      <button id="boton-terminar-dia" class="boton secundario">Terminar el día</button>
+    </section>
+
+    <!-- Llamada -->
+    <section id="pantalla-llamada" class="pantalla oculto">
+      <div class="cabecera-llamada">
+        <span id="llamada-emoji" class="emoji-grande"></span>
+        <div>
+          <h2 id="llamada-nombre"></h2>
+          <p id="llamada-pista" class="pista"></p>
+        </div>
+      </div>
+
+      <div class="medidores">
+        <div class="medidor">
+          <span>Sospecha</span>
+          <div class="barra"><div id="barra-sospecha" class="relleno sospecha"></div></div>
+        </div>
+        <div class="medidor">
+          <span>Confianza</span>
+          <div class="barra"><div id="barra-confianza" class="relleno confianza"></div></div>
+        </div>
+        <span id="mensajes-restantes" class="restantes"></span>
+      </div>
+
+      <div id="chat" class="chat"></div>
+
+      <form id="form-mensaje" class="form-mensaje">
+        <input type="text" id="input-mensaje" placeholder="¿Qué le decís?" autocomplete="off" maxlength="300">
+        <button type="submit" class="boton" id="boton-enviar">Enviar</button>
+      </form>
+      <button id="boton-colgar" class="boton peligro">Colgar</button>
+    </section>
+
+    <!-- Resultado de una llamada -->
+    <section id="pantalla-resultado" class="pantalla oculto">
+      <h2 id="resultado-titulo"></h2>
+      <p id="resultado-texto"></p>
+      <blockquote id="resultado-pensamiento" class="pensamiento"></blockquote>
+      <button id="boton-volver" class="boton">Seguir</button>
+    </section>
+
+    <!-- Fin del juego -->
+    <section id="pantalla-fin" class="pantalla oculto">
+      <h1 id="fin-titulo"></h1>
+      <p id="fin-texto"></p>
+      <button id="boton-reiniciar" class="boton">Jugar de nuevo</button>
+    </section>
+
+  </main>
+  <script src="personajes.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
